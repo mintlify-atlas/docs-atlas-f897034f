@@ -1,0 +1,331 @@
+---
+title: 'Governance'
+description: 'Understand OpenFront project governance and the contribution path from new to core contributor'
+icon: 'gavel'
+---
+
+OpenFront is an open-source project that welcomes contributions from everyone. However, to maintain code quality and project stability, we have a structured governance model and contribution path.
+
+## Project Authority
+
+OpenFront follows a **maintainer-led governance model**:
+
+- The project maintainer ([evan](https://github.com/evanpelle)) has final authority on all code changes and design decisions
+- All pull requests require maintainer approval before merging
+- The maintainer reserves the right to reject contributions that don't align with the project's vision or quality standards
+
+<Note>
+This governance model ensures consistent project direction and long-term stability. While all contributions are appreciated, the maintainer must prioritize the project's health and sustainability.
+</Note>
+
+## Contribution Path
+
+To ensure code quality and project stability, OpenFront uses a **progressive contribution system**. Contributors gain access to more complex work as they demonstrate understanding of the codebase.
+
+### 1. New Contributors
+
+When you're just starting with OpenFront, you're limited to:
+
+- **UI improvements**: Interface enhancements, styling fixes, layout improvements
+- **Small bug fixes**: Minor issues that don't affect core game logic
+
+<Steps>
+  <Step title="Join Development Discord">
+    Connect with the community at [https://discord.gg/K9zernJB5z](https://discord.gg/K9zernJB5z)
+  </Step>
+  
+  <Step title="Explore the codebase">
+    Set up your development environment and familiarize yourself with the project structure
+  </Step>
+  
+  <Step title="Find good first issues">
+    Look for issues labeled "good first issue" or "UI" in the GitHub repository
+  </Step>
+  
+  <Step title="Submit small PRs">
+    Start with focused, small pull requests that are easy to review
+  </Step>
+</Steps>
+
+**Why this limitation?**
+
+- Helps you become familiar with the codebase without risk
+- UI changes are easier to review and less likely to break core functionality
+- Small, focused PRs have a higher chance of being accepted
+- Builds trust with the maintainer through successful contributions
+
+### 2. Established Contributors
+
+After several successful pull requests and demonstrating understanding of the codebase, you may work on:
+
+- **Complex features**: Significant new functionality
+- **Architecture changes**: Refactoring and structural improvements
+- **Performance optimization**: Improvements to game performance
+- **Integration work**: Connecting systems and components
+
+**How to advance:**
+
+- Consistently deliver high-quality PRs
+- Show understanding of the codebase in code reviews and discussions
+- Demonstrate good judgment in design decisions
+- Be responsive to feedback and willing to iterate
+- Participate actively in Discord discussions
+
+### 3. Core Contributors
+
+Only those with extensive experience with the project may modify:
+
+- **Critical game systems**: Core game logic that affects gameplay
+- **Networking and synchronization**: Server-client communication
+- **Security-sensitive code**: Authentication, authorization, data validation
+- **Build and deployment**: CI/CD, infrastructure, release process
+
+**How to reach this level:**
+
+- Sustained contributions over an extended period
+- Deep understanding of the entire codebase
+- Proven track record of high-quality, stable code
+- Recognition from the maintainer for exceptional contributions
+
+<Warning>
+Modifying `src/core` (shared game logic) is restricted to established and core contributors. All changes to `src/core` **MUST** include comprehensive tests.
+</Warning>
+
+## Before Starting Work
+
+To maximize your chances of having a contribution accepted:
+
+<Steps>
+  <Step title="Open an issue">
+    Describe what you want to contribute and why
+  </Step>
+  
+  <Step title="Wait for feedback">
+    Get maintainer input before investing significant time
+  </Step>
+  
+  <Step title="Discuss in Discord">
+    For larger features, have a conversation in the Development Discord
+  </Step>
+  
+  <Step title="Start small">
+    If approved, begin with a focused implementation
+  </Step>
+</Steps>
+
+<Note>
+Small improvements (typo fixes, minor UI tweaks) can proceed directly to the PR stage without an issue.
+</Note>
+
+## Code Quality Requirements
+
+All contributions must meet these standards:
+
+### Documentation
+
+- All code must be well-commented
+- Complex logic needs explanatory comments
+- Public APIs require JSDoc documentation
+- Follow existing commenting patterns in the codebase
+
+### Testing
+
+- New features should include relevant tests
+- Bug fixes should include regression tests
+- All changes to `src/core` **MUST** be tested
+- Run `npm test` before submitting PR
+- Verify tests pass: `npm run test:coverage`
+
+### Code Style
+
+- Follow existing style patterns in the codebase
+- Run `npm run format` before committing
+- Run `npm run lint:fix` to catch issues
+- ESLint and Prettier enforce consistency
+
+### Stability
+
+- New features should not break existing functionality
+- Test on multiple systems/browsers if applicable
+- Document your testing process in the PR
+- Be thorough in edge case handling
+
+## Pull Request Process
+
+### Creating a PR
+
+1. **Fork and clone** the repository
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** following code quality requirements
+4. **Commit with clear messages**: Use present tense ("Add feature" not "Added feature")
+5. **Push to your fork**: `git push origin feature/amazing-feature`
+6. **Open a Pull Request** on GitHub
+
+### PR Checklist
+
+Before submitting, ensure:
+
+- [ ] **Linked relevant issue** (e.g., "Resolves #123")
+- [ ] **Added screenshots** for UI changes
+- [ ] **Processed text through `translateText()`** and added strings to `en.json`
+- [ ] **Added/updated tests** in the `tests/` directory
+- [ ] **Verified `npm test` passes**
+- [ ] **Ran `npm run format` and `npm run lint:fix`**
+- [ ] **Provided Discord username** for communication
+- [ ] **Described testing performed**
+
+### PR Best Practices
+
+- **Keep it focused**: One feature or bug fix per PR
+- **Write clear descriptions**: Explain what, why, and how
+- **Include context**: Screenshots, videos, or examples
+- **Be responsive**: Reply to feedback promptly
+- **Iterate willingly**: Be open to requested changes
+- **Test thoroughly**: Verify your changes work as expected
+
+<Warning>
+Large, unfocused PRs are difficult to review and less likely to be accepted. Break large features into smaller, reviewable chunks.
+</Warning>
+
+## Development Workflow
+
+### Setting Up
+
+```bash
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/OpenFrontIO.git
+cd OpenFrontIO
+
+# Install dependencies (use inst, not install!)
+npm run inst
+
+# Run in development mode
+npm run dev
+```
+
+<Note>
+Always use `npm run inst` instead of `npm install`. This runs `npm ci --ignore-scripts` to ensure a consistent, secure environment and prevent supply chain attacks.
+</Note>
+
+### Making Changes
+
+```bash
+# Create a feature branch
+git checkout -b feature/your-feature-name
+
+# Make changes, then format and lint
+npm run format
+npm run lint:fix
+
+# Run tests
+npm test
+
+# Commit your changes
+git commit -m "Add feature description"
+
+# Push to your fork
+git push origin feature/your-feature-name
+```
+
+### Connecting to Staging/Production
+
+Sometimes you need to test against production servers:
+
+```bash
+# Connect to staging
+npm run dev:staging
+
+# Connect to production
+npm run dev:prod
+```
+
+<Note>
+To replay a production game, ensure you're on the same commit where the game was executed. Find the `gitCommit` value via `https://api.openfront.io/game/[gameId]`.
+</Note>
+
+## Communication Guidelines
+
+### Respectful Interaction
+
+- Be respectful and constructive in all project interactions
+- Treat all community members with courtesy
+- Focus on the code and ideas, not individuals
+- Assume good intentions
+
+### Asking Questions
+
+- Questions are welcome!
+- Search existing issues and Discord history first
+- Provide context when asking for help
+- Be patient waiting for responses (everyone's a volunteer)
+
+### Proposing Changes
+
+- For major changes, discuss in an issue before starting work
+- Explain the problem you're solving
+- Consider alternative approaches
+- Be open to feedback on your proposal
+
+## Project Structure
+
+Understanding the codebase structure helps you contribute effectively:
+
+- **`/src/client`**: Frontend game client (rendering, input, UI)
+- **`/src/server`**: Backend game server (networking, game state)
+- **`/src/core`**: Shared game logic (used by both client and server)
+- **`/resources`**: Static assets (images, maps, sounds)
+- **`/tests`**: Unit and integration tests
+
+<Warning>
+Changes to `/src/core` are restricted to established contributors and **MUST** include tests. This code runs on both client and server and is critical to game stability.
+</Warning>
+
+## License and CLA
+
+### License
+
+By contributing, you agree that your contributions will be licensed under:
+
+- **Code**: [GNU Affero General Public License v3.0 (AGPL v3.0)](https://www.gnu.org/licenses/agpl-3.0)
+- **Assets**: [Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/)
+
+### Copyright Notices
+
+Modified versions must preserve copyright notices:
+
+- Footer: "© OpenFront and Contributors"
+- Loading screen: "© OpenFront and Contributors"
+
+These must appear in reasonably visible locations.
+
+### CLA
+
+Contributors sign the Contributor License Agreement (CLA) automatically via CLA Assistant when submitting their first PR.
+
+[![CLA assistant](https://cla-assistant.io/readme/badge/openfrontio/OpenFrontIO)](https://cla-assistant.io/openfrontio/OpenFrontIO)
+
+## Final Notes
+
+Remember that maintaining this project requires significant effort. The maintainer appreciates your contributions but must prioritize long-term project health and stability.
+
+**Not all contributions will be accepted, and that's okay.**
+
+What matters is:
+
+- Respecting the process
+- Learning from feedback
+- Building trust through quality contributions
+- Supporting the community
+- Having fun building something great together!
+
+Thank you for helping make OpenFront better!
+
+<CardGroup cols={2}>
+  <Card title="Discord Community" icon="discord" href="/community/discord">
+    Join the Development Discord to connect with contributors
+  </Card>
+  
+  <Card title="Translations" icon="language" href="/community/translations">
+    Help translate OpenFront into your language
+  </Card>
+</CardGroup>

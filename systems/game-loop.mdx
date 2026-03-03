@@ -1,0 +1,219 @@
+---
+title: "Game Loop"
+description: "Understanding OpenFront's deterministic game tick system and update cycle"
+---
+
+## Overview
+
+OpenFront's game loop is built around a deterministic tick-based system managed by the `GameRunner` class. Each tick represents a discrete unit of game time where all game state modifications are applied in a predictable order.
+
+## GameRunner Architecture
+
+The `GameRunner` class coordinates the entire game execution cycle, managing turns, executions, and game state updates.
+
+### Core Components
+
+<ParamField path="game" type="Game">
+  The core game state instance containing all players, units, and map data
+</ParamField>
+
+<ParamField path="execManager" type="Executor">
+  Manages conversion of player intents into execution objects
+</ParamField>
+
+<ParamField path="callBack" type="Function">
+  Callback function that receives game updates after each tick
+</ParamField>
+
+## Initialization
+
+When a game starts, the `GameRunner` initializes various game systems:
+
+```typescript src/core/GameRunner.ts
+init() {
+  if (this.game.config().isRandomSpawn()) {
+    this.game.addExecution(...this.execManager.spawnPlayers());
+  }
+  if (this.game.config().bots() > 0) {
+    this.game.addExecution(
+      ...this.execManager.spawnBots(this.game.config().numBots())
+    );
+  }
+  if (this.game.config().spawnNations()) {
+    this.game.addExecution(...this.execManager.nationExecutions());
+  }
+  this.game.addExecution(new WinCheckExecution());
+  if (!this.game.config().isUnitDisabled(UnitType.Factory)) {
+    this.game.addExecution(
+      new RecomputeRailClusterExecution(this.game.railNetwork())
+    );
+  }
+}
+```
+
+<Note>
+Initialization creates execution objects for spawning players, bots, nations, and ongoing game systems like win checking and rail network updates.
+</Note>
+
+## Tick Execution Cycle
+
+The `executeNextTick()` method is the heart of the game loop:
+
+### Execution Flow
+
+1. **Guard Checks**: Verify no concurrent execution and turns are available
+2. **Intent Conversion**: Convert player intents from the current turn into execution objects
+3. **State Update**: Execute all pending executions via `game.executeNextTick()`
+4. **Performance Tracking**: Measure tick execution duration
+5. **View Updates**: Update player name positions during spawn phase
+6. **Data Collection**: Drain packed tile updates and motion plans
+7. **Callback**: Send updates to the client
+
+```typescript src/core/GameRunner.ts
+public executeNextTick(pendingTurns?: number): boolean {
+  if (this.isExecuting) {
+    return false;
+  }
+  if (this.currTurn >= this.turns.length) {
+    return false;
+  }
+  this.isExecuting = true;
+
+  this.game.addExecution(
+    ...this.execManager.createExecs(this.turns[this.currTurn])
+  );
+  this.currTurn++;
+
+  let updates: GameUpdates;
+  let tickExecutionDuration: number = 0;
+
+  try {
+    const startTime = performance.now();
+    updates = this.game.executeNextTick();
+    const endTime = performance.now();
+    tickExecutionDuration = endTime - startTime;
+  } catch (error: unknown) {
+    // Error handling...
+    this.isExecuting = false;
+    return false;
+  }
+
+  // Update view data and send callback...
+  this.isExecuting = false;
+  return true;
+}
+```
+
+## Turn Management
+
+Turns are queued and processed sequentially:
+
+<ParamField path="addTurn" type="(turn: Turn) => void">
+  Adds a turn containing player intents to the execution queue
+</ParamField>
+
+<ParamField path="pendingTurns" type="() => number">
+  Returns the number of turns waiting to be executed
+</ParamField>
+
+### Turn Structure
+
+Each turn contains an array of `StampedIntent` objects representing player actions:
+
+```typescript
+type Turn = {
+  intents: StampedIntent[];
+};
+```
+
+## Determinism
+
+The game loop ensures deterministic execution through:
+
+- **Fixed Tick Order**: All executions run in the same order every time
+- **Pseudorandom Numbers**: Seeded random number generator ensures reproducibility
+- **No External State**: All state changes occur through the execution system
+- **Turn-Based Input**: Player actions are batched into turns and processed atomically
+
+<Info>
+Determinism is critical for multiplayer synchronization. All clients running the same sequence of turns will arrive at identical game states.
+</Info>
+
+## View Data Updates
+
+The game loop periodically updates view-specific data for rendering:
+
+```typescript src/core/GameRunner.ts
+if (this.game.inSpawnPhase() && this.game.ticks() % 2 === 0) {
+  this.game
+    .players()
+    .filter(
+      (p) =>
+        p.type() === PlayerType.Human || p.type() === PlayerType.Nation,
+    )
+    .forEach(
+      (p) => (this.playerViewData[p.id()] = placeName(this.game, p)),
+    );
+}
+
+if (this.game.ticks() < 3 || this.game.ticks() % 30 === 0) {
+  this.game.players().forEach((p) => {
+    this.playerViewData[p.id()] = placeName(this.game, p);
+  });
+}
+```
+
+<Note>
+Name placement calculations are expensive, so they're only updated during spawn phase (every 2 ticks) or periodically during gameplay (every 30 ticks).
+</Note>
+
+## Performance Monitoring
+
+Each tick's execution time is measured and included in the game update:
+
+```typescript
+this.callBack({
+  tick: this.game.ticks(),
+  packedTileUpdates,
+  ...(packedMotionPlans ? { packedMotionPlans } : {}),
+  updates: updates,
+  playerNameViewData: this.playerViewData,
+  tickExecutionDuration: tickExecutionDuration,
+  pendingTurns: pendingTurns ?? 0,
+});
+```
+
+## Error Handling
+
+The game loop includes comprehensive error handling:
+
+```typescript src/core/GameRunner.ts
+try {
+  const startTime = performance.now();
+  updates = this.game.executeNextTick();
+  const endTime = performance.now();
+  tickExecutionDuration = endTime - startTime;
+} catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error("Game tick error:", error.message);
+    this.callBack({
+      errMsg: error.message,
+      stack: error.stack,
+    } as ErrorUpdate);
+  } else {
+    console.error("Game tick error:", error);
+  }
+  this.isExecuting = false;
+  return false;
+}
+```
+
+<Info>
+Errors during tick execution are caught, logged, and sent to the client through the error callback mechanism.
+</Info>
+
+## Related Systems
+
+- [Intent/Execution Pattern](/systems/intents-executions) - How player actions become game state changes
+- [Pathfinding](/systems/pathfinding) - Movement calculations during tick execution
+- [Alliances](/systems/alliances) - Alliance state managed through execution system

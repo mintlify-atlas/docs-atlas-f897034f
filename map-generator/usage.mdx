@@ -1,0 +1,274 @@
+---
+title: Using the Map Generator
+description: How to run the map generator and create new maps
+---
+
+## Quick Start
+
+The fastest way to generate maps is using the npm script:
+
+```bash
+npm run gen-maps
+```
+
+This command:
+1. Navigates to the `map-generator/` directory
+2. Runs `go run .` to process all maps
+3. Automatically formats the output files
+
+## Installation
+
+Before using the map generator, ensure you have Go installed:
+
+<Steps>
+  <Step title="Install Go">
+    Download and install Go from [https://go.dev/doc/install](https://go.dev/doc/install)
+  </Step>
+  
+  <Step title="Install Dependencies">
+    ```bash
+    cd map-generator
+    go mod download
+    ```
+  </Step>
+  
+  <Step title="Run the Generator">
+    ```bash
+    go run .
+    ```
+  </Step>
+</Steps>
+
+## Command Line Usage
+
+### Basic Commands
+
+<CodeGroup>
+```bash Process All Maps
+go run .
+```
+
+```bash Process Single Map
+go run . --maps=fourislands
+```
+
+```bash Process Multiple Maps
+go run . --maps=northamerica,world,europe
+```
+
+```bash npm Script (All Maps)
+npm run gen-maps
+```
+</CodeGroup>
+
+### Command Line Flags
+
+#### Map Selection
+
+- `--maps`: Comma-separated list of maps to process
+  ```bash
+  go run . --maps=world,eastasia,big_plains
+  ```
+
+#### Logging Flags
+
+<CodeGroup>
+```bash Set Log Level
+go run . --log-level=debug
+# Values: ALL, DEBUG, INFO (default), WARN, ERROR
+```
+
+```bash Verbose Mode
+go run . --verbose
+# or shorthand:
+go run . -v
+# Enables DEBUG level and prefixes logs with [mapname]
+```
+
+```bash Performance Logging
+go run . --log-performance
+# Shows performance recommendations, sets log-level=DEBUG
+```
+
+```bash Removal Logging
+go run . --log-removal
+# Shows removed island/lake positions and sizes, sets log-level=DEBUG
+```
+</CodeGroup>
+
+<Note>
+  The `--log-performance` and `--log-removal` flags are opt-in on top of DEBUG level. To see all possible logs, use `--log-level=ALL`.
+</Note>
+
+## Creating a New Map
+
+<Steps>
+  <Step title="Create Map Folder">
+    Create a new directory in `assets/maps/<map_name>`
+  </Step>
+  
+  <Step title="Add Source Image">
+    Create `assets/maps/<map_name>/image.png`
+    
+    The image should use blue channel values to represent terrain:
+    - Blue < 140: Plains
+    - Blue 140-158: Plains with elevation
+    - Blue 159-178: Highlands
+    - Blue 179-200: Mountains
+    - Blue = 106 or Alpha < 20: Water
+  </Step>
+  
+  <Step title="Create Map Info">
+    Create `assets/maps/<map_name>/info.json` with map metadata:
+    
+    ```json
+    {
+      "name": "MySampleMap",
+      "nations": [
+        {
+          "coordinates": [396, 364],
+          "name": "United States",
+          "flag": "us"
+        }
+      ]
+    }
+    ```
+    
+    - `coordinates`: [x, y] spawn position (origin at top-left)
+    - `name`: Nation display name
+    - `flag`: ISO 3166 country code (see `src/client/data/countries.json`)
+  </Step>
+  
+  <Step title="Register the Map">
+    Add the map to the registry in `map-generator/main.go`:
+    
+    ```go
+    var maps = []struct {
+      Name   string
+      IsTest bool
+    }{
+      // ... existing maps
+      {Name: "mysamplemap"},
+    }
+    ```
+    
+    The `Name` should match your `<map_name>` folder.
+  </Step>
+  
+  <Step title="Run the Generator">
+    ```bash
+    go run . --maps=mysamplemap
+    ```
+    
+    Or process all maps:
+    ```bash
+    npm run gen-maps
+    ```
+  </Step>
+  
+  <Step title="Find Output Files">
+    Generated files will be in `resources/maps/<map_name>/`:
+    - `map.bin`, `map4x.bin`, `map16x.bin`
+    - `manifest.json`
+    - `thumbnail.webp`
+  </Step>
+</Steps>
+
+## Creating the Source Image
+
+You can create `image.png` by:
+
+1. **Cropping the world map**:
+   - [Download world map (large file)](https://drive.google.com/file/d/1W2oMPj1L5zWRyPhh8LfmnY3_kve-FBR2/view?usp=sharing)
+   - Use GIMP or similar tools to crop your desired region
+
+2. **Custom creation**:
+   - Use any image editing software
+   - Paint terrain using blue channel values (see terrain mapping table)
+   - Save as PNG
+
+<Note>
+  The generator only reads the **blue channel**. Red and green values are ignored, so grayscale images work perfectly.
+</Note>
+
+## Map Processing Notes
+
+### Automatic Cleanup
+
+- **Small Islands**: Islands smaller than 30 tiles are automatically removed
+- **Small Lakes**: Bodies of water smaller than 200 tiles are removed
+- **Test Maps**: Use `IsTest: true` in `main.go` to disable automatic cleanup
+
+### Dimension Normalization
+
+The generator normalizes dimensions to multiples of 4:
+- Width becomes: `Width - (Width % 4)`
+- Height becomes: `Height - (Height % 4)`
+- Any pixels beyond these bounds are cropped
+
+### Performance Considerations
+
+For optimal game performance:
+- Keep map area between 2-3 million pixels
+- Aim for 1-2 million land tiles
+- Avoid exceeding 3 million land tiles
+
+## Enabling Maps In-Game
+
+After generating map files, enable the map in-game:
+
+<Steps>
+  <Step title="Update Game Types">
+    Add to `GameMapType` and `mapCategories` in `src/core/game/Game.ts`
+  </Step>
+  
+  <Step title="Update Map Playlist">
+    Add to `src/server/MapPlaylist.ts`
+  </Step>
+  
+  <Step title="Add Translation">
+    Add to the `map` object in `resources/lang/en.json`
+  </Step>
+  
+  <Step title="Update Credits">
+    Add license and attribution to `CREDITS.md`
+  </Step>
+</Steps>
+
+## Development Tools
+
+<CodeGroup>
+```bash Format Code
+go fmt .
+# or use npm:
+npm run format:map-generator
+```
+
+```bash View Documentation
+go doc -cmd -u -all
+# or use npm:
+npm run docs:map-generator
+```
+</CodeGroup>
+
+## Adding Custom Flags
+
+To add nation flags:
+
+1. Add SVG flag to `resources/flags/<iso_code>.svg`
+2. Register country in `src/client/data/countries.json`
+3. Use the ISO code in your map's `info.json`
+
+## Troubleshooting
+
+### Map has 0 land tiles
+Ensure your source image has pixels with blue values ≠ 106 and alpha ≥ 20.
+
+### Map not found error
+Verify the map name in `--maps` flag matches an entry in the `maps` array in `main.go`.
+
+### Dimension warnings
+Your map may be outside the recommended 2-3 million pixel range. Consider resizing the source image.
+
+### Performance warnings
+Reduce map size or land tile count to stay within recommended limits (< 3 million land tiles).

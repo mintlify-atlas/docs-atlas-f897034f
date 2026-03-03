@@ -1,0 +1,209 @@
+---
+title: Alliance System
+description: Form strategic alliances, coordinate with allies, and manage diplomatic relationships in OpenFront
+---
+
+The alliance system allows players to form temporary partnerships for mutual benefit and protection. Alliances are a core strategic element that can determine victory or defeat.
+
+## How Alliances Work
+
+<Steps>
+  <Step title="Send Alliance Request">
+    You can send an alliance request to any player you share a border with. The request is sent to the other player for consideration.
+  </Step>
+  
+  <Step title="Accept or Reject">
+    The recipient can either accept the request (forming an alliance) or reject it. Rejected requests enter a cooldown period before you can request again.
+  </Step>
+  
+  <Step title="Alliance Active">
+    Once accepted, the alliance becomes active for a limited duration. Both players benefit from alliance protections and cooperation.
+  </Step>
+  
+  <Step title="Extension or Expiration">
+    Before expiration, both players can agree to extend the alliance. If not renewed, it expires automatically.
+  </Step>
+</Steps>
+
+## Alliance Benefits
+
+<CardGroup cols={2}>
+  <Card title="Cannot Attack" icon="shield-halved">
+    Allied players cannot attack each other's territory. Borders between allies are safe from aggression.
+  </Card>
+  
+  <Card title="Resource Sharing" icon="hand-holding-dollar">
+    Donate gold and troops to allies to help them expand or defend against threats.
+  </Card>
+  
+  <Card title="Coordinated Strategy" icon="people-group">
+    Work together to eliminate common enemies or control key regions of the map.
+  </Card>
+  
+  <Card title="Trade Benefits" icon="ship">
+    Trade ships can travel safely through allied waters and ports.
+  </Card>
+</CardGroup>
+
+## Alliance Requests
+
+### Sending Requests
+
+To send an alliance request, certain conditions must be met:
+
+<Accordion title="Border Requirement">
+  You must share a border with the target player. This means at least one of your tiles must be adjacent to one of their tiles.
+</Accordion>
+
+<Accordion title="Cooldown Period">
+  After a rejected request or broken alliance, there's a cooldown period before you can send another request to the same player.
+</Accordion>
+
+<Accordion title="One Request at a Time">
+  You can only have one pending outgoing request to each player. Wait for a response before sending another.
+</Accordion>
+
+### Request Duration
+
+Alliance requests don't last forever:
+- Requests expire after a set number of turns if not answered
+- Expired requests allow you to send a new request immediately
+- The recipient sees incoming requests in their diplomatic interface
+
+<Tip>
+Timing matters! Send alliance requests when it's strategically beneficial to both parties, such as when facing a common threat.
+</Tip>
+
+## Alliance Duration
+
+Alliances are temporary by design:
+
+<Tabs>
+  <Tab title="Initial Duration">
+    When an alliance is accepted, it lasts for a fixed number of turns (the exact duration is configured per game). Both players can see the remaining time.
+  </Tab>
+  
+  <Tab title="Extension Window">
+    As the alliance approaches expiration, an extension window opens. Both players must agree to extend for the alliance to continue.
+  </Tab>
+  
+  <Tab title="Mutual Extension">
+    If both players request extension, the alliance is automatically renewed for another full duration period.
+  </Tab>
+  
+  <Tab title="Expiration">
+    If either player declines extension (or doesn't respond), the alliance expires. After expiration, former allies can attack each other.
+  </Tab>
+</Tabs>
+
+### Extension Mechanics
+
+- The extension window opens near the end of the alliance duration
+- Each player independently decides whether to extend
+- Both players can see if the other has agreed to extend
+- Extensions reset the alliance timer to a full duration
+- Multiple extensions are possible, allowing long-term alliances
+
+<Warning>
+If only one player agrees to extend, the alliance still expires. Both must consent for the extension to take effect.
+</Warning>
+
+## Breaking Alliances
+
+Alliances can be broken manually before expiration:
+
+### Betrayal System
+
+Breaking an alliance is considered a betrayal:
+- Your betrayal count increases (visible to all players)
+- Other players may be less likely to trust you
+- High betrayal counts mark you as unreliable
+- Betrayals are tracked in your player statistics
+
+<Note>
+Letting an alliance expire naturally is NOT counted as a betrayal. Only manually breaking an active alliance counts.
+</Note>
+
+### Traitor Status
+
+Players who break alliances receive a temporary "Traitor" status:
+- The status is visible to all players
+- Duration is limited (expires after a set number of turns)
+- Does not prevent gameplay, but signals untrustworthiness
+- Multiple betrayals can result in permanent reputation damage
+
+## Multiple Alliances
+
+You can maintain alliances with multiple players simultaneously:
+- Each alliance has its own duration and extension window
+- All allies benefit from non-aggression pacts with each other
+- Coordinate with multiple allies to dominate the map
+- Be cautious: more allies means more potential betrayers
+
+<Tip>
+In team games, alliances with teammates are often less necessary since teams already cannot attack each other.
+</Tip>
+
+## Relations System
+
+The game tracks your relationship with every other player:
+
+### Relation Levels
+
+1. **Hostile**: Actively at war or recently attacked
+2. **Distrustful**: Negative interactions, broken alliances
+3. **Neutral**: No significant interactions
+4. **Friendly**: Alliance active or recent cooperation
+
+### Relation Effects
+
+- Relations gradually decay toward neutral over time
+- Alliances set relations to "Friendly"
+- Attacking sets relations to "Hostile"
+- Breaking alliances sharply reduces relations
+- Relations affect AI behavior and diplomacy options
+
+<CardGroup cols={2}>
+  <Card title="Building Relations" icon="handshake">
+    Form alliances, donate resources, and avoid conflict to improve relations.
+  </Card>
+  
+  <Card title="Damaging Relations" icon="swords">
+    Attack, betray alliances, or refuse aid to worsen relations.
+  </Card>
+</CardGroup>
+
+## Strategic Considerations
+
+### When to Ally
+
+<Accordion title="Facing a Strong Enemy">
+  Unite with neighbors to counter a dominant player threatening multiple borders.
+</Accordion>
+
+<Accordion title="Securing a Flank">
+  Ally with a neighbor to focus military efforts in another direction without worrying about backstabs.
+</Accordion>
+
+<Accordion title="Resource Exchange">
+  Partner with a gold-rich or troop-rich ally to balance each other's strengths.
+</Accordion>
+
+### When to Break Alliances
+
+- Your ally is weakened and vulnerable to conquest
+- The alliance prevents you from achieving victory conditions
+- A better strategic opportunity emerges
+- Your ally betrays another player (may betray you next)
+
+<Warning>
+Time betrayals carefully. Breaking an alliance at the wrong moment can unite former allies and other players against you.
+</Warning>
+
+## Alliance Chat & Communication
+
+While alliances don't have dedicated chat channels, you can:
+- Send emojis to communicate quickly
+- Use the standard chat system
+- Coordinate attacks through resource donations
+- Signal intentions through troop movements

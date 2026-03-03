@@ -1,0 +1,429 @@
+---
+title: Contributing Guide
+description: How to contribute to OpenFront and get your changes merged
+---
+
+Thank you for considering contributing to OpenFront! This guide will help you understand our contribution process and requirements.
+
+## Quick Links
+
+<CardGroup cols={2}>
+  <Card title="Play the Game" icon="gamepad" href="https://openfront.io/">
+    Experience OpenFront live
+  </Card>
+  <Card title="Development Discord" icon="discord" href="https://discord.gg/K9zernJB5z">
+    Join the developer community
+  </Card>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/openfrontio/OpenFrontIO/issues">
+    Find issues to work on
+  </Card>
+  <Card title="Translation Project" icon="language" href="https://crowdin.com/project/openfront-mls">
+    Help translate the game
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+### Prerequisites
+
+Before contributing, ensure you have:
+
+- Node.js (recent version)
+- npm 10.9.2 or higher
+- Git for version control
+- Familiarity with TypeScript
+
+<Info>
+  If you haven't set up your development environment yet, see the [Development Setup](/development/setup) guide.
+</Info>
+
+### Initial Setup
+
+<Steps>
+  <Step title="Fork the Repository">
+    Fork [OpenFrontIO](https://github.com/openfrontio/OpenFrontIO) on GitHub
+  </Step>
+  
+  <Step title="Clone Your Fork">
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/OpenFrontIO.git
+    cd OpenFrontIO
+    ```
+  </Step>
+  
+  <Step title="Install Dependencies">
+    ```bash
+    npm run inst
+    ```
+    
+    <Warning>
+      Always use `npm run inst` instead of `npm install` to ensure security and consistency.
+    </Warning>
+  </Step>
+  
+  <Step title="Verify Setup">
+    ```bash
+    npm run dev
+    ```
+    
+    The game should open in your browser at `http://localhost:9000`.
+  </Step>
+</Steps>
+
+## Contribution Path
+
+OpenFront uses a progressive contribution system based on experience level:
+
+### 1. New Contributors
+
+**Allowed:**
+- UI improvements and styling
+- Small bug fixes
+- Documentation updates
+- Translation contributions
+
+**Why this limitation?**
+- Helps you become familiar with the codebase
+- UI changes are easier to review
+- Lower risk of breaking core functionality
+- Higher acceptance rate for focused PRs
+
+### 2. Established Contributors
+
+After several successful PRs demonstrating codebase understanding:
+- Feature implementations
+- Larger refactoring efforts
+- Client-side enhancements
+- Non-critical server changes
+
+### 3. Core Contributors
+
+Only contributors with extensive project experience may modify:
+- Core game simulation (`/src/core`)
+- Critical game systems
+- Server coordination logic
+- Security-sensitive code
+
+<Note>
+  This system ensures code quality and project stability while providing a clear path for new contributors to grow.
+</Note>
+
+## Development Workflow
+
+### 1. Before Starting Work
+
+<Steps>
+  <Step title="Find or Create an Issue">
+    - Search [existing issues](https://github.com/openfrontio/OpenFrontIO/issues)
+    - Comment on the issue to claim it
+    - For new features, create an issue first
+  </Step>
+  
+  <Step title="Wait for Maintainer Feedback">
+    - Small improvements can proceed directly
+    - Larger changes require maintainer approval
+    - This prevents wasted effort on rejected features
+  </Step>
+  
+  <Step title="Create a Branch">
+    ```bash
+    git checkout -b feature/your-feature-name
+    # or
+    git checkout -b fix/issue-number-bug-name
+    ```
+  </Step>
+</Steps>
+
+### 2. Coding Standards
+
+<CodeGroup>
+```bash Format Code
+npm run format
+```
+
+```bash Lint Code
+npm run lint
+```
+
+```bash Lint and Fix
+npm run lint:fix
+```
+</CodeGroup>
+
+<Info>
+  The project uses Husky with lint-staged to automatically format and lint code on commit.
+</Info>
+
+#### Code Quality Requirements
+
+- Follow existing style patterns
+- Add comments for complex logic
+- Use meaningful variable names
+- Keep functions focused and small
+- Avoid unnecessary dependencies
+
+### 3. Testing
+
+All new features and bug fixes must include tests:
+
+<CodeGroup>
+```bash Run Tests
+npm test
+```
+
+```bash Run with Coverage
+npm run test:coverage
+```
+</CodeGroup>
+
+<Warning>
+  All code changes in `/src/core` **MUST** be tested to ensure game logic stability.
+</Warning>
+
+See the [Testing Guide](/development/testing) for details on writing tests.
+
+### 4. Commit Your Changes
+
+Write clear, concise commit messages:
+
+<CodeGroup>
+```bash Good Examples
+git commit -m "Add territory selection highlight"
+git commit -m "Fix alliance donation calculation"
+git commit -m "Update rendering performance for large maps"
+```
+
+```bash Bad Examples
+git commit -m "Added feature"  # Too vague
+git commit -m "Fixed bug"      # No context
+git commit -m "WIP"            # Not descriptive
+```
+</CodeGroup>
+
+**Commit Message Guidelines:**
+- Use present tense ("Add feature" not "Added feature")
+- Start with a verb (Add, Fix, Update, Remove)
+- Be specific about what changed
+- Keep first line under 72 characters
+
+### 5. Push to Your Fork
+
+```bash
+git push origin feature/your-feature-name
+```
+
+## Submitting a Pull Request
+
+### Opening the PR
+
+<Steps>
+  <Step title="Go to Original Repository">
+    Navigate to [openfrontio/OpenFrontIO](https://github.com/openfrontio/OpenFrontIO)
+  </Step>
+  
+  <Step title="Click 'New Pull Request'">
+    Select your fork and branch
+  </Step>
+  
+  <Step title="Fill Out PR Template">
+    Complete all sections of the PR template
+  </Step>
+</Steps>
+
+### PR Checklist
+
+Before submitting, ensure:
+
+- [ ] Linked the relevant issue (e.g., `Resolves #123`)
+- [ ] Added screenshots for UI changes
+- [ ] Processed text through `translateText()` and added strings to `en.json`
+- [ ] Added/updated tests in the `tests/` directory
+- [ ] Verified `npm test` passes
+- [ ] Ran `npm run format` and `npm run lint`
+- [ ] Provided Discord username for communication
+- [ ] Tested changes in development environment
+- [ ] Described testing process in PR description
+
+### PR Description Template
+
+```markdown
+## Description
+Brief description of what this PR does
+
+## Related Issue
+Resolves #123
+
+## Changes Made
+- Change 1
+- Change 2
+- Change 3
+
+## Screenshots (if applicable)
+[Add screenshots here]
+
+## Testing
+- [ ] Tested locally
+- [ ] Tested on multiple browsers
+- [ ] Added unit tests
+- [ ] All tests pass
+
+## Discord Username
+@username#1234
+```
+
+### Review Process
+
+1. **Maintainer Review**: The project maintainer ([evan](https://github.com/evanpelle)) reviews all PRs
+2. **Feedback**: You may receive requests for changes
+3. **Be Responsive**: Respond to feedback promptly
+4. **Approval**: Maintainer approval is required before merge
+5. **Merge**: Maintainer will merge approved PRs
+
+<Note>
+  The maintainer has final authority on all code changes and design decisions. Not all contributions will be accepted.
+</Note>
+
+## Special Areas
+
+### Core Game Logic (`/src/core`)
+
+<Warning>
+  Changes to `/src/core` require:
+  - Extensive testing
+  - Proof of determinism
+  - Core contributor status
+  - Maintainer pre-approval
+</Warning>
+
+The core must remain deterministic because each client runs its own simulation. Any non-determinism will cause game state to diverge between players.
+
+### Translations
+
+OpenFront uses Crowdin for translations:
+
+<Steps>
+  <Step title="Join Translation Discord">
+    [discord.gg/3zZzacjWFr](https://discord.gg/3zZzacjWFr)
+  </Step>
+  
+  <Step title="Access Crowdin Project">
+    [crowdin.com/project/openfront-mls](https://crowdin.com/project/openfront-mls)
+  </Step>
+  
+  <Step title="Select Your Language">
+    Choose your language or request a new one
+  </Step>
+  
+  <Step title="Translate Strings">
+    Follow Crowdin's interface to translate
+  </Step>
+</Steps>
+
+<Info>
+  When adding new UI text in code, always use `translateText()` and add the English string to `en.json`.
+</Info>
+
+### Documentation
+
+Documentation improvements are always welcome:
+
+- Fix typos or unclear sections
+- Add missing information
+- Improve code examples
+- Update outdated content
+
+## Project Governance
+
+OpenFront is maintained by [evan](https://github.com/evanpelle) who has final authority on:
+
+- Code changes and design decisions
+- Pull request acceptance/rejection
+- Project direction and features
+- Contributor status advancement
+
+**Why this structure?**
+- Maintains consistent vision
+- Ensures code quality
+- Enables quick decisions
+- Protects long-term stability
+
+## Communication
+
+<CardGroup cols={2}>
+  <Card title="Development Discord" icon="discord" href="https://discord.gg/K9zernJB5z">
+    Technical discussions and questions
+  </Card>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/openfrontio/OpenFrontIO/issues">
+    Bug reports and feature requests
+  </Card>
+</CardGroup>
+
+### Communication Guidelines
+
+- Be respectful and constructive
+- Search existing issues before posting
+- Provide context and details
+- Stay on topic
+- Accept feedback gracefully
+
+## Tips for Success
+
+<AccordionGroup>
+  <Accordion title="Start Small">
+    Begin with small UI improvements or bug fixes to learn the codebase. Don't jump into complex features immediately.
+  </Accordion>
+  
+  <Accordion title="Ask Questions">
+    Don't hesitate to ask for clarification on Discord. It's better to ask than to waste time on the wrong approach.
+  </Accordion>
+  
+  <Accordion title="Read Existing Code">
+    Study how similar features are implemented. Follow existing patterns and conventions.
+  </Accordion>
+  
+  <Accordion title="Test Thoroughly">
+    Test your changes in multiple scenarios. Consider edge cases and error conditions.
+  </Accordion>
+  
+  <Accordion title="Keep PRs Focused">
+    One PR should address one issue. Don't bundle multiple unrelated changes.
+  </Accordion>
+  
+  <Accordion title="Be Patient">
+    Reviews take time. Maintainers balance multiple responsibilities.
+  </Accordion>
+</AccordionGroup>
+
+## Common Mistakes to Avoid
+
+- Using `npm install` instead of `npm run inst`
+- Modifying core game logic as a new contributor
+- Submitting PRs without tests
+- Ignoring lint/format errors
+- Not linking related issues
+- Bundling multiple features in one PR
+- Making breaking changes without discussion
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the **GNU Affero General Public License v3.0 (AGPL v3.0)**.
+
+See [LICENSE](https://github.com/openfrontio/OpenFrontIO/blob/main/LICENSE) for full details.
+
+## Thank You!
+
+Your contributions help make OpenFront better for everyone. Whether you're fixing a typo, translating text, or implementing a feature, your effort is appreciated.
+
+Remember: quality over quantity. A well-tested, focused PR is more valuable than a large, unfocused one.
+
+<CardGroup cols={3}>
+  <Card title="Architecture" icon="diagram-project" href="/development/architecture">
+    Understand the system design
+  </Card>
+  <Card title="Setup Guide" icon="wrench" href="/development/setup">
+    Set up your environment
+  </Card>
+  <Card title="Testing Guide" icon="flask" href="/development/testing">
+    Write effective tests
+  </Card>
+</CardGroup>

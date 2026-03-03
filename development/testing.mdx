@@ -1,0 +1,659 @@
+---
+title: Testing Guide
+description: How to write and run tests for OpenFront
+---
+
+OpenFront uses Vitest for testing, ensuring game logic stability and catching regressions early.
+
+## Overview
+
+OpenFront's testing strategy focuses on:
+
+<CardGroup cols={2}>
+  <Card title="Core Logic" icon="gear">
+    Deterministic simulation must be thoroughly tested
+  </Card>
+  <Card title="Game Mechanics" icon="chess">
+    All gameplay features need test coverage
+  </Card>
+  <Card title="Regression Prevention" icon="shield">
+    Tests prevent breaking existing functionality
+  </Card>
+  <Card title="Client Rendering" icon="browser">
+    UI components and rendering logic
+  </Card>
+</CardGroup>
+
+## Test Framework
+
+OpenFront uses **Vitest**, a fast unit test framework with:
+
+- Native ESM support
+- TypeScript support out of the box
+- Jest-compatible API
+- Fast watch mode
+- Coverage reports via v8
+
+### Configuration
+
+Vitest is configured in `vite.config.ts`:
+
+```typescript vite.config.ts
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './tests/setup.ts',
+  },
+});
+```
+
+## Running Tests
+
+### Basic Commands
+
+<CodeGroup>
+```bash Run All Tests
+npm test
+```
+
+```bash Run with Coverage
+npm run test:coverage
+```
+
+```bash Watch Mode (Vitest UI)
+npx vitest --ui
+```
+</CodeGroup>
+
+<Note>
+  The `npm test` command runs both core tests and server tests: `vitest run && vitest run tests/server`
+</Note>
+
+### Test Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm test` | Run all tests once |
+| `npm run test:coverage` | Generate coverage report |
+| `npm run perf` | Run performance benchmarks |
+
+## Test Structure
+
+Tests are organized in the `/tests` directory:
+
+```
+tests/
+├── client/          # Client-specific tests
+├── core/            # Core game logic tests
+├── server/          # Server tests
+├── economy/         # Economy system tests
+├── nukes/          # Nuclear weapons tests
+├── pathfinding/    # Pathfinding algorithm tests
+├── perf/           # Performance benchmarks
+├── util/           # Utility function tests
+├── setup.ts        # Test setup/configuration
+└── *.test.ts       # Root-level test files
+```
+
+## Writing Tests
+
+### Basic Test Structure
+
+<CodeGroup>
+```typescript Simple Test
+import { describe, it, expect } from 'vitest';
+import { calculateAttack } from '@/core/combat';
+
+describe('calculateAttack', () => {
+  it('should calculate damage correctly', () => {
+    const result = calculateAttack({
+      attackerTroops: 100,
+      defenderTroops: 50,
+      terrain: 'plain',
+    });
+    
+    expect(result.damage).toBeGreaterThan(0);
+    expect(result.remainingTroops).toBeLessThan(50);
+  });
+});
+```
+
+```typescript With Setup
+import { describe, it, expect, beforeEach } from 'vitest';
+import { GameState } from '@/core/state';
+
+describe('GameState', () => {
+  let gameState: GameState;
+  
+  beforeEach(() => {
+    gameState = new GameState({
+      seed: 12345,
+      players: 2,
+    });
+  });
+  
+  it('should initialize with correct player count', () => {
+    expect(gameState.players.length).toBe(2);
+  });
+});
+```
+</CodeGroup>
+
+### Testing Core Logic
+
+<Warning>
+  All changes to `/src/core` **MUST** include tests. This is non-negotiable for game stability.
+</Warning>
+
+Example core test:
+
+```typescript tests/Attack.test.ts
+import { describe, it, expect } from 'vitest';
+import { AttackExecution } from '@/core/executions/AttackExecution';
+import { GameState } from '@/core/state/GameState';
+
+describe('AttackExecution', () => {
+  it('should reduce attacker troops', () => {
+    const state = new GameState({ seed: 123 });
+    const territory1 = state.territories[0];
+    const territory2 = state.territories[1];
+    
+    territory1.troops = 100;
+    territory2.troops = 50;
+    
+    const execution = new AttackExecution({
+      from: territory1.id,
+      to: territory2.id,
+      troops: 30,
+    });
+    
+    execution.execute(state);
+    
+    expect(territory1.troops).toBeLessThan(100);
+  });
+  
+  it('should be deterministic', () => {
+    // Run same attack twice with same seed
+    const state1 = new GameState({ seed: 456 });
+    const state2 = new GameState({ seed: 456 });
+    
+    const execution1 = new AttackExecution({ /* ... */ });
+    const execution2 = new AttackExecution({ /* ... */ });
+    
+    execution1.execute(state1);
+    execution2.execute(state2);
+    
+    // Results must be identical
+    expect(state1.territories).toEqual(state2.territories);
+  });
+});
+```
+
+### Testing Determinism
+
+Determinism is critical for OpenFront's architecture:
+
+<Steps>
+  <Step title="Use Seeded Random">
+    Always use seeded random number generators:
+    
+    ```typescript
+    import seedrandom from 'seedrandom';
+    
+    const rng = seedrandom('test-seed');
+    const randomValue = rng();
+    ```
+  </Step>
+  
+  <Step title="Test Identical Results">
+    Run the same operation twice with the same seed:
+    
+    ```typescript
+    it('produces identical results with same seed', () => {
+      const result1 = simulateTick({ seed: 123 });
+      const result2 = simulateTick({ seed: 123 });
+      
+      expect(result1).toEqual(result2);
+    });
+    ```
+  </Step>
+  
+  <Step title="Test Different Seeds">
+    Verify different seeds produce different results:
+    
+    ```typescript
+    it('produces different results with different seeds', () => {
+      const result1 = simulateTick({ seed: 123 });
+      const result2 = simulateTick({ seed: 456 });
+      
+      expect(result1).not.toEqual(result2);
+    });
+    ```
+  </Step>
+</Steps>
+
+### Testing Client Components
+
+For UI components using Lit:
+
+```typescript tests/client/ui/Button.test.ts
+import { describe, it, expect } from 'vitest';
+import { fixture, html } from '@open-wc/testing';
+import './Button';
+
+describe('Button Component', () => {
+  it('renders with text', async () => {
+    const el = await fixture(html`
+      <custom-button>Click Me</custom-button>
+    `);
+    
+    expect(el.textContent).toBe('Click Me');
+  });
+  
+  it('emits click event', async () => {
+    let clicked = false;
+    const el = await fixture(html`
+      <custom-button @click=${() => clicked = true}>
+        Click Me
+      </custom-button>
+    `);
+    
+    el.click();
+    expect(clicked).toBe(true);
+  });
+});
+```
+
+### Testing Server Logic
+
+Server tests are in `/tests/server`:
+
+```typescript tests/server/Lobby.test.ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import { LobbyManager } from '@/server/lobby/LobbyManager';
+
+describe('LobbyManager', () => {
+  let lobby: LobbyManager;
+  
+  beforeEach(() => {
+    lobby = new LobbyManager();
+  });
+  
+  it('creates new lobby', () => {
+    const lobbyId = lobby.create({
+      maxPlayers: 4,
+      map: 'europe',
+    });
+    
+    expect(lobbyId).toBeDefined();
+    expect(lobby.get(lobbyId).maxPlayers).toBe(4);
+  });
+  
+  it('adds players to lobby', () => {
+    const lobbyId = lobby.create({ maxPlayers: 2 });
+    
+    lobby.addPlayer(lobbyId, 'player1');
+    lobby.addPlayer(lobbyId, 'player2');
+    
+    expect(lobby.get(lobbyId).players.length).toBe(2);
+  });
+});
+```
+
+## Coverage Requirements
+
+<Warning>
+  Core logic (`/src/core`) should aim for **high test coverage** (80%+ recommended).
+</Warning>
+
+Generate coverage reports:
+
+```bash
+npm run test:coverage
+```
+
+This creates a coverage report in `/coverage`:
+
+```
+coverage/
+├── index.html      # HTML coverage report
+├── lcov.info       # LCOV format for CI tools
+└── coverage.json   # Raw coverage data
+```
+
+### Coverage Metrics
+
+| Metric | Target | Description |
+|--------|--------|-------------|
+| Statements | >80% | Individual statements executed |
+| Branches | >75% | Conditional branches covered |
+| Functions | >80% | Functions called in tests |
+| Lines | >80% | Lines of code executed |
+
+<Info>
+  Focus on meaningful coverage over arbitrary percentages. A well-tested feature at 70% coverage is better than superficial tests at 90%.
+</Info>
+
+## Testing Best Practices
+
+### 1. Test Behavior, Not Implementation
+
+<CodeGroup>
+```typescript Good
+it('allows player to attack adjacent territory', () => {
+  const result = game.attack(territoryA, territoryB);
+  expect(result.success).toBe(true);
+});
+```
+
+```typescript Bad
+it('calls calculateDamage internally', () => {
+  const spy = vi.spyOn(game, 'calculateDamage');
+  game.attack(territoryA, territoryB);
+  expect(spy).toHaveBeenCalled();
+});
+```
+</CodeGroup>
+
+### 2. Use Descriptive Test Names
+
+<CodeGroup>
+```typescript Good
+it('prevents attack when territories are not adjacent')
+it('calculates correct alliance donation percentage')
+it('handles disconnected player gracefully')
+```
+
+```typescript Bad
+it('test 1')
+it('attack')
+it('works correctly')
+```
+</CodeGroup>
+
+### 3. Test Edge Cases
+
+```typescript
+describe('Territory Capture', () => {
+  it('handles zero troops', () => { /* ... */ });
+  it('handles maximum troops', () => { /* ... */ });
+  it('handles negative troop input', () => { /* ... */ });
+  it('handles non-existent territory', () => { /* ... */ });
+});
+```
+
+### 4. Keep Tests Isolated
+
+```typescript
+// Good: Each test is independent
+beforeEach(() => {
+  gameState = new GameState();
+});
+
+// Bad: Tests depend on each other
+let sharedState;
+
+it('test 1', () => {
+  sharedState = createState();
+});
+
+it('test 2', () => {
+  // Depends on test 1
+  sharedState.modify();
+});
+```
+
+### 5. Use Factories for Test Data
+
+```typescript tests/util/factories.ts
+export function createTestPlayer(overrides = {}) {
+  return {
+    id: 'player1',
+    name: 'Test Player',
+    territories: [],
+    troops: 100,
+    ...overrides,
+  };
+}
+
+export function createTestGame(overrides = {}) {
+  return {
+    seed: 12345,
+    players: [createTestPlayer()],
+    turn: 0,
+    ...overrides,
+  };
+}
+```
+
+Usage:
+
+```typescript
+it('handles multiple players', () => {
+  const game = createTestGame({
+    players: [
+      createTestPlayer({ id: 'player1' }),
+      createTestPlayer({ id: 'player2' }),
+    ],
+  });
+  
+  expect(game.players.length).toBe(2);
+});
+```
+
+## Mocking and Stubbing
+
+Vitest provides mocking utilities:
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+
+// Mock a module
+vi.mock('@/server/api', () => ({
+  fetchPlayerData: vi.fn(() => Promise.resolve({ id: '123' })),
+}));
+
+// Spy on a method
+const spy = vi.spyOn(gameState, 'updateTerritory');
+
+// Mock timers
+vi.useFakeTimers();
+vi.advanceTimersByTime(1000);
+vi.useRealTimers();
+```
+
+## Performance Testing
+
+Run performance benchmarks:
+
+```bash
+npm run perf
+```
+
+This executes tests in `/tests/perf` using the Benchmark.js library:
+
+```typescript tests/perf/pathfinding.perf.ts
+import Benchmark from 'benchmark';
+import { findPath } from '@/core/pathfinding';
+
+const suite = new Benchmark.Suite();
+
+suite
+  .add('Pathfinding: Small map', () => {
+    findPath(smallMap, start, end);
+  })
+  .add('Pathfinding: Large map', () => {
+    findPath(largeMap, start, end);
+  })
+  .on('complete', function() {
+    console.log('Fastest is ' + this.filter('fastest').map('name'));
+  })
+  .run();
+```
+
+## Continuous Integration
+
+OpenFront uses GitHub Actions for CI:
+
+```yaml .github/workflows/ci.yml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - run: npm run inst
+      - run: npm test
+      - run: npm run lint
+```
+
+<Note>
+  All PRs must pass CI checks before being merged.
+</Note>
+
+## Common Testing Patterns
+
+### Testing Alliances
+
+```typescript tests/AllianceSystem.test.ts
+import { describe, it, expect, beforeEach } from 'vitest';
+import { GameState } from '@/core/state';
+
+describe('Alliance System', () => {
+  let game: GameState;
+  
+  beforeEach(() => {
+    game = new GameState({
+      players: [
+        createTestPlayer({ id: 'p1' }),
+        createTestPlayer({ id: 'p2' }),
+      ],
+    });
+  });
+  
+  it('allows alliance requests', () => {
+    const intent = createAllianceRequestIntent('p1', 'p2');
+    const execution = new AllianceRequestExecution(intent);
+    
+    execution.execute(game);
+    
+    expect(game.allianceRequests).toContainEqual({
+      from: 'p1',
+      to: 'p2',
+    });
+  });
+  
+  it('creates alliance when accepted', () => {
+    game.createAllianceRequest('p1', 'p2');
+    game.acceptAllianceRequest('p2', 'p1');
+    
+    expect(game.alliances).toContainEqual({
+      members: ['p1', 'p2'],
+    });
+  });
+});
+```
+
+### Testing Game Tick Execution
+
+```typescript
+it('executes all intents in a tick', () => {
+  const turn = createTurn([
+    createMoveIntent('p1', territoryA, territoryB),
+    createAttackIntent('p2', territoryC, territoryD),
+  ]);
+  
+  game.processTurn(turn);
+  game.executeNextTick();
+  
+  expect(game.territories[territoryB].owner).toBe('p1');
+  expect(game.territories[territoryD].troops).toBeLessThan(100);
+});
+```
+
+## Debugging Tests
+
+### Using VS Code
+
+Add to `.vscode/launch.json`:
+
+```json
+{
+  "type": "node",
+  "request": "launch",
+  "name": "Debug Vitest Tests",
+  "runtimeExecutable": "npm",
+  "runtimeArgs": ["test", "--", "--run"],
+  "console": "integratedTerminal",
+  "internalConsoleOptions": "neverOpen"
+}
+```
+
+### Console Logging
+
+```typescript
+it('debugs game state', () => {
+  const game = createTestGame();
+  
+  console.log('Initial state:', game);
+  
+  game.executeAction();
+  
+  console.log('After action:', game);
+  
+  expect(game.someProperty).toBe(expectedValue);
+});
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Tests fail with module resolution errors">
+    Ensure `tsconfig.json` paths are correctly set and Vitest is using `vite-tsconfig-paths`.
+  </Accordion>
+  
+  <Accordion title="Flaky tests (sometimes pass, sometimes fail)">
+    This usually indicates:
+    - Non-deterministic code (missing seed)
+    - Timing issues (use `vi.useFakeTimers()`)
+    - Shared state between tests (use `beforeEach`)
+  </Accordion>
+  
+  <Accordion title="Coverage not updating">
+    Delete the coverage directory and re-run:
+    
+    ```bash
+    rm -rf coverage
+    npm run test:coverage
+    ```
+  </Accordion>
+  
+  <Accordion title="Tests timeout">
+    Increase timeout for slow tests:
+    
+    ```typescript
+    it('slow operation', async () => {
+      // ...
+    }, 10000); // 10 second timeout
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Related Documentation
+
+<CardGroup cols={3}>
+  <Card title="Architecture" icon="diagram-project" href="/development/architecture">
+    Understand the system design
+  </Card>
+  <Card title="Setup Guide" icon="wrench" href="/development/setup">
+    Set up development environment
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Contribution guidelines
+  </Card>
+</CardGroup>

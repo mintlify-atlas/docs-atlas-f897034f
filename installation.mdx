@@ -1,0 +1,439 @@
+---
+title: Developer installation
+description: Set up a local OpenFront development environment
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **npm** v10.9.2 or higher - [Download npm](https://www.npmjs.com/)
+- **Git** - For cloning the repository
+- **Modern web browser** - Chrome, Firefox, Edge, or Safari
+
+<Note>
+  OpenFront is a browser-based game with both client and server components. This guide covers setting up the full development environment.
+</Note>
+
+## Installation
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/openfrontio/OpenFrontIO.git
+    cd OpenFrontIO
+    ```
+    
+    This downloads the complete OpenFront source code to your local machine.
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    npm run inst
+    ```
+    
+    <Warning>
+      **Important**: Always use `npm run inst` instead of `npm install` or `npm i`.
+      
+      This command runs `npm ci --ignore-scripts` which:
+      - Installs dependencies exactly as specified in `package-lock.json`
+      - Skips running package scripts for security
+      - Helps prevent supply chain attacks
+    </Warning>
+    
+    The installation includes dependencies for:
+    - Client: Vite, PixiJS, Lit, TypeScript
+    - Server: Express, WebSocket (ws), Winston logging
+    - Testing: Vitest, ESLint, Prettier
+  </Step>
+</Steps>
+
+## Running the development server
+
+### Full stack development
+
+Start both the client and server with live reloading:
+
+```bash
+npm run dev
+```
+
+This command:
+- Starts the Vite development server for the client
+- Launches the game server with development settings
+- Opens the game in your default browser automatically
+- Enables hot module reloading for rapid development
+
+<Note>
+  To prevent the browser from opening automatically, set the environment variable:
+  ```bash
+  SKIP_BROWSER_OPEN=true npm run dev
+  ```
+</Note>
+
+**Access the game**:
+- Client: `http://localhost:5173` (Vite default)
+- Server: `http://localhost:3000` (Master server)
+- Workers: Ports assigned by `config.workerPortByIndex(workerId)`
+
+### Client only development
+
+Run just the frontend with hot reloading:
+
+```bash
+npm run start:client
+```
+
+Useful when:
+- Working on UI components only
+- Testing visual changes
+- Developing client-side features
+
+### Server only development
+
+Run just the backend with development settings:
+
+```bash
+npm run start:server-dev
+```
+
+Useful when:
+- Testing game logic
+- Debugging server issues
+- Working on API endpoints
+
+## Connecting to remote backends
+
+### Staging environment
+
+Connect your local client to staging API servers:
+
+```bash
+npm run dev:staging
+```
+
+Use this to:
+- Test against staging data
+- Verify user profiles and authentication
+- Debug purchase flows
+
+### Production environment
+
+Connect your local client to production API servers:
+
+```bash
+npm run dev:prod
+```
+
+<Warning>
+  **Production connection notes**:
+  - Use this for replaying production games
+  - Find the `gitCommit` value at `https://api.openfront.io/game/[gameId]`
+  - Checkout the same commit locally to replay correctly
+  - Unfinished games cannot be replayed on localhost
+</Warning>
+
+## Project structure
+
+Understanding the codebase organization:
+
+```
+OpenFrontIO/
+├── src/
+│   ├── client/          # Frontend game client (PixiJS, Lit)
+│   ├── core/            # Shared game logic (MUST be tested)
+│   └── server/          # Backend game server (Express, WebSocket)
+├── resources/           # Static assets
+│   ├── maps/            # 40+ map definitions
+│   ├── images/          # Sprites and UI assets
+│   ├── sounds/          # Audio files
+│   ├── lang/            # Localization files
+│   └── flags/           # Country flag icons
+├── tests/               # Test suites
+├── map-generator/       # Go-based map generation tool
+└── docs/                # Architecture and API documentation
+```
+
+<Note>
+  Key directories:
+  - `/src/client` - All frontend React/Lit components and game rendering
+  - `/src/core` - Game mechanics shared between client and server
+  - `/src/server` - Server logic, networking, and game state management
+  - `/resources` - Contains 40+ maps and all game assets
+</Note>
+
+## Development tools
+
+### Code formatting
+
+Format all files using Prettier:
+
+```bash
+npm run format
+```
+
+The project uses:
+- Prettier for code formatting
+- Plugin for organizing imports
+- Plugin for shell script formatting
+
+### Linting
+
+Check for code issues:
+
+```bash
+npm run lint
+```
+
+Automatically fix issues:
+
+```bash
+npm run lint:fix
+```
+
+Configuration:
+- ESLint 9 with TypeScript support
+- Prettier integration for consistent formatting
+- GitHub Actions formatter for CI output
+
+### Testing
+
+Run the full test suite:
+
+```bash
+npm test
+```
+
+This runs:
+- Unit tests with Vitest
+- Server integration tests
+
+With coverage reports:
+
+```bash
+npm run test:coverage
+```
+
+<Warning>
+  **Testing requirement**: All code changes in `src/core` MUST be tested. This is strictly enforced for contributions.
+</Warning>
+
+### Performance testing
+
+Run performance benchmarks:
+
+```bash
+npm run perf
+```
+
+## Building for production
+
+### Development build
+
+```bash
+npm run build-dev
+```
+
+Creates a development build with:
+- TypeScript type checking
+- Source maps for debugging
+- Development mode optimizations
+
+### Production build
+
+```bash
+npm run build-prod
+```
+
+Creates an optimized production build with:
+- Type checking enforced (fails on errors)
+- Minification and tree shaking
+- Production optimizations
+
+<Note>
+  The build process uses Vite for fast compilation and Concurrent execution for parallel TypeScript checking.
+</Note>
+
+## Map generation
+
+OpenFront uses a Go-based map generator:
+
+### View map generator documentation
+
+```bash
+npm run docs:map-generator
+```
+
+### Generate new maps
+
+```bash
+npm run gen-maps
+```
+
+This:
+1. Runs the Go map generator (`cd map-generator && go run .`)
+2. Formats the output with Prettier
+
+### Format map generator code
+
+```bash
+npm run format:map-generator
+```
+
+## Git hooks
+
+The project uses Husky for Git hooks with lint-staged:
+
+- **Pre-commit**: Automatically runs ESLint and Prettier on staged files
+- **Validation**: Ensures code quality before commits
+
+Setup is automatic after running `npm run inst`.
+
+## Contributing to development
+
+### Before you start
+
+<Steps>
+  <Step title="Join the Discord">
+    Request to join the development [Discord server](https://discord.gg/K9zernJB5z) to coordinate with the team.
+  </Step>
+
+  <Step title="Understand the contribution path">
+    OpenFront uses a progressive contribution system:
+    
+    - **New contributors**: Limited to UI improvements and small bug fixes
+    - **Established contributors**: Can work on complex features after several successful PRs
+    - **Core contributors**: May modify critical game systems with extensive project experience
+  </Step>
+
+  <Step title="Open an issue first">
+    Before investing significant time:
+    - Open a GitHub issue describing your planned contribution
+    - Wait for maintainer feedback
+    - Small improvements can proceed directly to PR
+  </Step>
+</Steps>
+
+### Code quality requirements
+
+<Warning>
+  All contributions must meet these standards:
+  - Well-commented code following existing patterns
+  - No breaking changes to existing functionality
+  - Thorough testing before submission
+  - All `src/core` changes MUST include tests
+</Warning>
+
+### Pull request process
+
+1. **Fork the repository** on GitHub
+2. **Create a feature branch**: `git checkout -b amazing-feature`
+3. **Make your changes** following the code style
+4. **Test thoroughly** on multiple browsers if applicable
+5. **Commit with clear messages**: `git commit -m 'Add amazing feature'`
+6. **Push to your fork**: `git push origin amazing-feature`
+7. **Open a pull request** with:
+   - Description of changes
+   - Screenshots for UI changes
+   - Testing methodology
+   - Rationale for the change
+
+<Note>
+  The project maintainer ([evan](https://github.com/evanpelle)) has final authority on all code changes. Not all contributions will be accepted - the focus is on long-term project health.
+</Note>
+
+## Additional resources
+
+<CardGroup cols={2}>
+  <Card
+    title="Architecture documentation"
+    icon="diagram-project"
+  >
+    Review `docs/Architecture.md` for system design details
+  </Card>
+  <Card
+    title="API documentation"
+    icon="code"
+  >
+    See `docs/API.md` for endpoint specifications
+  </Card>
+  <Card
+    title="Authentication"
+    icon="key"
+  >
+    Learn about auth flows in `docs/Auth.md`
+  </Card>
+  <Card
+    title="Contribution guidelines"
+    icon="handshake"
+  >
+    Read `CONTRIBUTING.md` for detailed contribution rules
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+**Port conflicts**
+
+If you see port already in use errors:
+- Default client port: 5173 (Vite)
+- Default server port: 3000 (Master)
+- Worker ports: Dynamically assigned
+
+Kill processes using these ports or configure different ones in the environment.
+
+**Module not found errors**
+
+Ensure you used `npm run inst` and not `npm install`:
+```bash
+rm -rf node_modules package-lock.json
+npm run inst
+```
+
+**TypeScript errors**
+
+The project requires TypeScript 5.7.2+. Type errors will block production builds:
+```bash
+npx tsc --noEmit
+```
+
+**Browser not opening**
+
+Set the environment variable:
+```bash
+export SKIP_BROWSER_OPEN=true
+npm run dev
+```
+
+## Getting help
+
+<CardGroup cols={2}>
+  <Card
+    title="Development Discord"
+    icon="discord"
+    href="https://discord.gg/K9zernJB5z"
+  >
+    Ask questions and get help from the dev community
+  </Card>
+  <Card
+    title="GitHub issues"
+    icon="github"
+    href="https://github.com/openfrontio/OpenFrontIO/issues"
+  >
+    Report bugs or request features
+  </Card>
+  <Card
+    title="Translation Discord"
+    icon="language"
+    href="https://discord.gg/3zZzacjWFr"
+  >
+    Join the translation community
+  </Card>
+  <Card
+    title="Crowdin project"
+    icon="globe"
+    href="https://crowdin.com/project/openfront-mls"
+  >
+    Help translate the game into your language
+  </Card>
+</CardGroup>

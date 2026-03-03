@@ -1,0 +1,105 @@
+---
+title: Map Generator Overview
+description: Introduction to OpenFront's Go-based terrain map generator
+---
+
+## What is the Map Generator?
+
+The Map Generator is a Go-based command-line tool that converts PNG image files into optimized binary terrain maps for OpenFront. It processes source images from the `assets/maps/` directory and outputs game-ready map files to `resources/maps/`.
+
+## Key Features
+
+### Terrain Processing
+
+- **PNG to Terrain Conversion**: Reads PNG files and converts pixels into terrain based on the **Blue channel** value
+- **Multi-format Support**: Grayscale and other image formats are fully supported since only blue values are used
+- **Automatic Cleanup**: Removes small islands (< 30 tiles) and lakes (< 200 tiles) to improve game performance
+- **Dimension Normalization**: Automatically crops dimensions to multiples of 4 for minimap compatibility
+
+### Output Generation
+
+For each map, the generator creates:
+
+<Steps>
+  <Step title="Binary Map Files">
+    - `map.bin` - Full-scale terrain data
+    - `map4x.bin` - 1/4 scale (half dimensions) for minimaps
+    - `map16x.bin` - 1/16 scale (quarter dimensions) for minimaps
+  </Step>
+  
+  <Step title="Metadata">
+    - `manifest.json` - Map dimensions and land tile counts for all scales
+  </Step>
+  
+  <Step title="Thumbnail">
+    - `thumbnail.webp` - WebP preview image of the map
+  </Step>
+</Steps>
+
+## Terrain Type Mapping
+
+The generator determines terrain type and magnitude based on pixel blue channel values:
+
+| Input Condition | Terrain Type | Magnitude | Notes |
+|:----------------|:-------------|:----------|:------|
+| **Alpha < 20** | Water | Distance to Land* | Transparent pixels become water |
+| **Blue = 106** | Water | Distance to Land* | Specific key color for water |
+| **Blue < 140** | Land (Plains) | 0 | Clamped to minimum magnitude |
+| **Blue 140-158** | Land (Plains) | 0-9 | Low elevation terrain |
+| **Blue 159-178** | Land (Highland) | 10-19 | Medium elevation terrain |
+| **Blue 179-200** | Land (Mountain) | 20-30 | High elevation terrain |
+| **Blue > 200** | Land (Mountain) | 30 | Clamped to maximum magnitude |
+
+<Note>
+  *For water tiles, magnitude is calculated during generation as the Manhattan distance to the nearest land tile.
+</Note>
+
+## Performance Recommendations
+
+The map generator includes built-in performance recommendations:
+
+- **Map Area**: 2-3 million pixels (width × height)
+- **Land Tiles**: Maximum 3 million land tiles recommended
+- **Average Land Count**: 1-2 million tiles
+
+Maps exceeding these limits will trigger debug warnings when using `--log-level=debug` or `--log-performance`.
+
+## How It Works
+
+<Steps>
+  <Step title="Read Source Assets">
+    Loads `image.png` and `info.json` from `assets/maps/<map_name>/`
+  </Step>
+  
+  <Step title="Process Pixels">
+    Converts each pixel to terrain type based on blue channel value
+  </Step>
+  
+  <Step title="Clean Up Terrain">
+    Removes small islands and lakes using flood-fill algorithms
+  </Step>
+  
+  <Step title="Generate Minimaps">
+    Creates 4x and 16x downscaled versions using 2×2 block sampling
+  </Step>
+  
+  <Step title="Calculate Water Distance">
+    Uses BFS to compute distance-to-land for all water tiles
+  </Step>
+  
+  <Step title="Pack Binary Data">
+    Serializes terrain into compact binary format:
+    - Bit 7: Land (1) / Water (0)
+    - Bit 6: Shoreline flag
+    - Bit 5: Ocean flag
+    - Bits 0-4: Magnitude (0-31)
+  </Step>
+  
+  <Step title="Write Output Files">
+    Saves binary maps, manifest.json, and thumbnail.webp to `resources/maps/<map_name>/`
+  </Step>
+</Steps>
+
+## Additional Resources
+
+For map creation tutorials, scripts, and third-party tools, visit the [Official OpenFront Wiki - Map Making](https://openfront.wiki/Map_Making).

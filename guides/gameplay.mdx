@@ -1,0 +1,162 @@
+---
+title: Core Gameplay
+description: Master the fundamental mechanics of territory expansion, resource management, and combat in OpenFront
+---
+
+OpenFront is a real-time strategy game where you expand your territory, manage resources, and compete against other players to control the map.
+
+## Territory Expansion
+
+<CardGroup cols={2}>
+  <Card title="Conquering Land" icon="map">
+    Expand your territory by conquering adjacent tiles. Your border tiles determine where you can expand next.
+  </Card>
+  <Card title="Border Management" icon="border-all">
+    Border tiles are automatically calculated based on neighboring territories. Focus expansion on strategic positions.
+  </Card>
+</CardGroup>
+
+### How Territory Works
+
+Your territory consists of all tiles you control. The game automatically tracks:
+- **Border Tiles**: Tiles adjacent to enemy or neutral territory
+- **Interior Tiles**: Tiles completely surrounded by your own territory
+- **Territory Size**: Total number of tiles owned determines victory progress
+
+<Tip>
+To win the game, you need to control a specific percentage of the map's total tiles. Monitor your territory size relative to the win condition.
+</Tip>
+
+## Resource Management
+
+OpenFront features two primary resources that fuel your expansion:
+
+<Tabs>
+  <Tab title="Gold">
+    Gold is the primary currency used to build units and structures.
+    
+    **Earning Gold:**
+    - Passive income based on territory size
+    - Trade ships arriving at ports
+    - Trains delivering goods via railroads
+    - Conquering enemy players (inherit their gold)
+    - Workers generating steady income
+    
+    **Spending Gold:**
+    - Building military units (warships, nukes)
+    - Constructing structures (ports, cities, defense posts)
+    - Upgrading existing structures to higher levels
+    
+    <Note>
+    Gold income scales with your territory and structures. Larger empires generate more passive gold per turn.
+    </Note>
+  </Tab>
+  
+  <Tab title="Troops">
+    Troops (also called manpower) are required to attack and defend territory.
+    
+    **Gaining Troops:**
+    - Automatic increase every turn
+    - Cities provide additional troop generation
+    - Receive troops from allies via donations
+    - Troops scale with territory size
+    
+    **Using Troops:**
+    - Launch land attacks against neighbors
+    - Load troops onto transport ships for naval invasions
+    - Defend against incoming attacks
+    - Larger attacks consume more troops
+    
+    <Tip>
+    There's a maximum troop capacity. Once reached, excess troops are lost. Launch attacks before hitting the cap.
+    </Tip>
+  </Tab>
+</Tabs>
+
+## Combat System
+
+### Attack Types
+
+<Accordion title="Land Attacks">
+  The primary method of expansion. Launch attacks from your border tiles against neighboring enemies or neutral territory.
+  
+  - Attacks consume troops based on attack size
+  - Battles resolve automatically each turn
+  - Both attacker and defender lose troops in combat
+  - Larger borders with the enemy result in faster expansion
+  - You can order retreats to conserve troops
+</Accordion>
+
+<Accordion title="Naval Invasions">
+  Use transport ships to attack across water and establish beachheads.
+  
+  - Build transport ships from coastal tiles
+  - Load troops onto the ship when created
+  - Ships automatically navigate to the target location
+  - Upon arrival, troops unload and begin conquering
+  - Vulnerable to warship interception during transit
+</Accordion>
+
+<Accordion title="Artillery & Defense">
+  Advanced warfare using specialized military units.
+  
+  - **Warships**: Patrol coastal waters and bombard land targets with shells
+  - **Defense Posts**: Boost defensive strength and provide artillery support
+  - **SAM Launchers**: Fire missiles to intercept incoming nuclear weapons
+  - **Missile Silos**: Launch nuclear strikes against distant targets
+</Accordion>
+
+### Combat Mechanics
+
+**Attack Speed**: The number of tiles conquered per turn depends on:
+- Number of attacking troops
+- Size of the shared border
+- Defensive bonuses (defense posts, fallout)
+
+**Casualties**: Both sides lose troops during combat:
+- Attackers lose troops based on terrain and defenses
+- Defenders lose troops based on attack strength
+- Defense posts provide defensive bonuses to nearby tiles
+
+**Retreat**: You can order your attacks to retreat, returning remaining troops to your territory. Retreats take time to execute.
+
+<Warning>
+Attacks against allies or teammates are blocked. Break alliances before targeting former allies.
+</Warning>
+
+## Structures
+
+Strategic structures provide economic and military advantages:
+
+| Structure | Purpose | Benefits |
+|-----------|---------|----------|
+| **City** | Population center | Increases troop generation rate |
+| **Port** | Naval base | Enables trade ship spawning for gold income |
+| **Factory** | Industrial center | Spawns trade trains on railroad networks |
+| **Defense Post** | Military fortification | Artillery support and defensive bonuses |
+| **SAM Launcher** | Air defense | Intercepts incoming nuclear weapons |
+| **Missile Silo** | Strategic weapons | Launch nuclear strikes at enemies |
+
+<Tip>
+Many structures are upgradable. Place a new structure on the same tile to upgrade it to the next level, improving its effectiveness.
+</Tip>
+
+## Win Conditions
+
+Victory is achieved by controlling a specific percentage of the map's total territory:
+- The required percentage varies by map and game mode
+- Your progress is tracked in real-time
+- Last player/team standing also wins
+- Conquered players' territories become available for capture
+
+## Spawn Phase
+
+Games begin with a spawn phase where players are immune to attacks:
+- Use this time to expand into neutral territory
+- Position yourself strategically for the main game
+- Build initial structures and units
+- Immunity ends after a fixed number of turns
+
+<Note>
+Nations (AI opponents) may have different immunity durations than human players.
+</Note>

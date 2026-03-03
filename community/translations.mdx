@@ -1,0 +1,224 @@
+---
+title: 'Translations'
+description: 'Help translate OpenFront into your language using Crowdin'
+icon: 'language'
+---
+
+OpenFront is played by people around the world, and we need your help to make it accessible in multiple languages. We use Crowdin to manage translations collaboratively.
+
+## Quick Start
+
+<Steps>
+  <Step title="Join Translation Discord">
+    Join the [Translation Discord](https://discord.gg/3zZzacjWFr) to connect with other translators and get support
+  </Step>
+  
+  <Step title="Access Crowdin Project">
+    Go to the OpenFront Crowdin project: [https://crowdin.com/project/openfront-mls](https://crowdin.com/project/openfront-mls)
+  </Step>
+  
+  <Step title="Sign In or Sign Up">
+    Log in if you already have a Crowdin account, or create a new account if you don't
+  </Step>
+  
+  <Step title="Join the Project">
+    Click to join the OpenFront translation project
+  </Step>
+  
+  <Step title="Select Your Language">
+    Choose the language you want to translate into. If your language isn't listed, click "Request New Language" and submit your request
+  </Step>
+  
+  <Step title="Start Translating">
+    Begin translating strings! Each string represents text that appears in the game
+  </Step>
+</Steps>
+
+## Translation Guidelines
+
+### Understanding Context
+
+Many strings in the game need context to translate accurately:
+
+- **Game terminology**: Words like "territory", "alliance", "structure" have specific meanings
+- **UI elements**: Button labels need to be concise to fit in the interface
+- **Messages**: In-game messages should match the game's tone
+
+<Note>
+If you're unsure about the context of a string, ask in the Translation Discord! Other translators or the development team can clarify.
+</Note>
+
+### Best Practices
+
+1. **Stay Consistent**
+   - Use the same translations for recurring terms
+   - Check how other strings translate similar concepts
+   - Maintain consistent tone throughout
+
+2. **Consider Length**
+   - UI elements have limited space
+   - Try to keep translations similar in length to the original
+   - Test if possible to ensure text fits
+
+3. **Preserve Formatting**
+   - Keep placeholders like `{playerName}` or `{count}` intact
+   - Maintain HTML tags if present
+   - Don't translate variable names or code
+
+4. **Use Natural Language**
+   - Translate meaning, not word-for-word
+   - Make it sound natural in your language
+   - Consider cultural context
+
+### Common Translation Patterns
+
+<CodeGroup>
+```text Placeholders
+Original: "Welcome, {playerName}!"
+Correct: "¡Bienvenido, {playerName}!"
+Incorrect: "¡Bienvenido, {nombreJugador}!"
+```
+
+```text HTML Tags
+Original: "Click <strong>here</strong> to continue"
+Correct: "Cliquez <strong>ici</strong> pour continuer"
+Incorrect: "Cliquez **ici** pour continuer"
+```
+
+```text Variables
+Original: "You have {count} territories"
+Correct: "Du hast {count} Territorien"
+Note: Position of {count} can change based on language grammar
+```
+</CodeGroup>
+
+## Working with Crowdin
+
+### Translation Editor Features
+
+- **Translation Memory**: See how similar strings were translated
+- **Glossary**: View agreed-upon translations for key terms
+- **Machine Translation**: Use as a starting point (always review!)
+- **Comments**: Ask questions or provide context
+- **Voting**: Approve good translations from other contributors
+
+### Translation Workflow
+
+1. **Browse Untranslated Strings**
+   - Crowdin shows you strings that need translation
+   - You can filter by file or search for specific text
+
+2. **Translate**
+   - Enter your translation in the editor
+   - Check suggestions from translation memory
+   - Review machine translations (use with caution)
+
+3. **Save**
+   - Submit your translation
+   - It will be reviewed before inclusion in the game
+
+4. **Vote on Others' Translations**
+   - Help improve translation quality by voting
+   - Upvote good translations, suggest improvements
+
+<Warning>
+Machine translations often miss context and nuance. Always review and edit machine-generated suggestions rather than using them directly.
+</Warning>
+
+## Requesting a New Language
+
+Don't see your language on the list?
+
+<Steps>
+  <Step title="Click Request New Language">
+    In the Crowdin project, find the "Request New Language" button
+  </Step>
+  
+  <Step title="Select Your Language">
+    Choose your language from the list, or specify a regional variant if needed
+  </Step>
+  
+  <Step title="Submit Request">
+    The project maintainer will review and approve language requests
+  </Step>
+  
+  <Step title="Wait for Approval">
+    You'll be notified when your language is added to the project
+  </Step>
+</Steps>
+
+## Quality Assurance
+
+### Proofreading
+
+Translations go through several quality checks:
+
+- **Peer review**: Other translators vote on translations
+- **Context verification**: Discord community helps clarify ambiguous strings
+- **In-game testing**: Translations are tested in the actual game interface
+
+### Common Issues to Avoid
+
+- **Untranslated placeholders**: Always keep `{variables}` in original form
+- **Broken formatting**: Preserve HTML tags and special characters
+- **Inconsistent terminology**: Use the same word for the same concept
+- **Overly literal translations**: Focus on meaning, not word-for-word
+- **Inappropriate length**: UI text that's too long may be truncated
+
+## Contributing Translation Code
+
+If you're a developer working on translation infrastructure:
+
+### Adding Translatable Strings
+
+All user-facing text must be processed through `translateText()`:
+
+```javascript
+import { translateText } from './translations';
+
+// Good
+const message = translateText('welcome_message');
+
+// Bad - hardcoded string
+const message = 'Welcome to OpenFront!';
+```
+
+### Adding to en.json
+
+When adding new strings, update `en.json` with the English source text:
+
+```json
+{
+  "welcome_message": "Welcome to OpenFront!",
+  "territory_count": "You have {count} territories"
+}
+```
+
+<Note>
+All code changes that add or modify user-facing text should include corresponding updates to `en.json`. These will be synced to Crowdin automatically.
+</Note>
+
+## Translation Status
+
+[![Crowdin](https://badges.crowdin.net/openfront-mls/localized.svg)](https://crowdin.com/project/openfront-mls)
+
+The badge above shows the current translation progress across all languages. Click it to see detailed statistics for each language.
+
+## Getting Help
+
+Need assistance with translations?
+
+1. **Join Translation Discord**: [https://discord.gg/3zZzacjWFr](https://discord.gg/3zZzacjWFr)
+2. **Ask in Crowdin comments**: Use the comment feature on specific strings
+3. **Check existing translations**: See how similar strings were handled
+4. **Review the glossary**: Look for established terminology
+
+<CardGroup cols={2}>
+  <Card title="Discord Community" icon="discord" href="/community/discord">
+    Join the Translation Discord for support and coordination
+  </Card>
+  
+  <Card title="Governance" icon="gavel" href="/community/governance">
+    Learn about the project's contribution model
+  </Card>
+</CardGroup>

@@ -1,0 +1,345 @@
+---
+title: Development Setup
+description: Set up your local development environment for OpenFront
+---
+
+This guide will help you set up a local development environment for contributing to OpenFront.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    Recent version (LTS recommended)
+  </Card>
+  <Card title="npm" icon="npm">
+    Version 10.9.2 or higher
+  </Card>
+  <Card title="Git" icon="git">
+    For version control
+  </Card>
+  <Card title="Modern Browser" icon="browser">
+    Chrome, Firefox, Edge, or Safari
+  </Card>
+</CardGroup>
+
+## Installation
+
+<Steps>
+  <Step title="Fork the Repository">
+    Go to [github.com/openfrontio/OpenFrontIO](https://github.com/openfrontio/OpenFrontIO) and click the "Fork" button in the top right.
+  </Step>
+  
+  <Step title="Clone Your Fork">
+    Clone your forked repository locally:
+    
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/OpenFrontIO.git
+    cd OpenFrontIO
+    ```
+  </Step>
+  
+  <Step title="Install Dependencies">
+    <Warning>
+      Use `npm run inst` instead of `npm install`. This runs `npm ci --ignore-scripts` to ensure a consistent and secure environment.
+    </Warning>
+    
+    ```bash
+    npm run inst
+    ```
+    
+    This command:
+    - Installs dependencies exactly according to `package-lock.json`
+    - Skips post-install scripts for security
+    - Prevents supply chain attacks
+  </Step>
+</Steps>
+
+## Running the Game
+
+### Full Development Mode
+
+Run both client and server with live reloading:
+
+```bash
+npm run dev
+```
+
+This command:
+- Starts the Vite dev server on port 9000
+- Launches the game server with development settings
+- Opens the game in your default browser
+- Enables hot module replacement (HMR)
+
+<Info>
+  Set `SKIP_BROWSER_OPEN=true` in your environment to prevent automatic browser opening.
+</Info>
+
+### Client Only
+
+Run just the frontend with Vite:
+
+<CodeGroup>
+```bash npm
+npm run start:client
+```
+
+```bash Direct
+vite
+```
+</CodeGroup>
+
+The client will be available at `http://localhost:9000`.
+
+### Server Only
+
+Run just the game server:
+
+<CodeGroup>
+```bash Development
+npm run start:server-dev
+```
+
+```bash Production Mode
+npm run start:server
+```
+</CodeGroup>
+
+<Note>
+  The `start:server-dev` script sets `GAME_ENV=dev` for development-specific behavior.
+</Note>
+
+## Connecting to Remote APIs
+
+During development, you may want to connect to staging or production API servers for testing authentication, profiles, or replays.
+
+### Staging API
+
+Connect to staging servers:
+
+```bash
+npm run dev:staging
+```
+
+This sets `API_DOMAIN=api.openfront.dev`.
+
+### Production API
+
+Connect to production servers:
+
+```bash
+npm run dev:prod
+```
+
+This sets `API_DOMAIN=api.openfront.io`.
+
+<Warning>
+  To replay a production game, ensure you're on the same git commit that the game was executed on. Find the `gitCommit` value at `https://api.openfront.io/game/[gameId]`.
+</Warning>
+
+## Development Workflow
+
+### Creating a Branch
+
+Create a feature or bugfix branch:
+
+<CodeGroup>
+```bash Feature
+git checkout -b feature/your-feature-name
+```
+
+```bash Bug Fix
+git checkout -b fix/issue-number-bug-name
+```
+</CodeGroup>
+
+### Code Quality Tools
+
+OpenFront enforces code quality using ESLint and Prettier:
+
+<CodeGroup>
+```bash Format Code
+npm run format
+```
+
+```bash Lint Code
+npm run lint
+```
+
+```bash Lint and Auto-fix
+npm run lint:fix
+```
+</CodeGroup>
+
+<Info>
+  The project uses Husky and lint-staged to automatically format and lint code before commits.
+</Info>
+
+### Building the Project
+
+<CodeGroup>
+```bash Development Build
+npm run build-dev
+```
+
+```bash Production Build
+npm run build-prod
+```
+</CodeGroup>
+
+The development build:
+- Runs TypeScript type checking
+- Builds with Vite in development mode
+- Outputs to `/static` directory
+
+The production build:
+- Runs type checking with `--kill-others-on-fail`
+- Optimizes and minifies code
+- Splits vendor chunks for better caching
+
+## Project Structure
+
+```
+OpenFrontIO/
+├── src/
+│   ├── client/       # Frontend game client
+│   │   ├── rendering/
+│   │   ├── ui/
+│   │   └── workers/
+│   ├── core/         # Shared deterministic game logic
+│   │   ├── intents/
+│   │   ├── executions/
+│   │   └── entities/
+│   └── server/       # Backend game server
+│       ├── lobby/
+│       └── game/
+├── resources/        # Static assets (images, maps, sounds)
+├── tests/           # Unit and integration tests
+├── map-generator/   # Go-based map generation tool
+├── package.json     # npm dependencies and scripts
+├── vite.config.ts   # Vite configuration
+├── tsconfig.json    # TypeScript configuration
+└── eslint.config.js # ESLint configuration
+```
+
+## Development Ports
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Client (Vite) | 9000 | Frontend development server |
+| Main Server | 3000 | Lobby and coordination server |
+| Worker 0 | 3001 | Game server instance 1 |
+| Worker 1 | 3002 | Game server instance 2 |
+
+<Note>
+  Vite proxies WebSocket connections and API requests to the appropriate backend servers.
+</Note>
+
+## Environment Variables
+
+Create a `.env` file in the project root for local configuration:
+
+```bash .env
+# Skip automatic browser opening
+SKIP_BROWSER_OPEN=true
+
+# API domain (overrides default)
+API_DOMAIN=api.openfront.dev
+
+# Game environment
+GAME_ENV=dev
+
+# Stripe (if testing payments)
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+```
+
+## Additional Tools
+
+### Map Generator
+
+OpenFront includes a Go-based map generator:
+
+```bash
+npm run gen-maps
+```
+
+This command:
+1. Runs the map generator in the `/map-generator` directory
+2. Generates new map data
+3. Automatically formats the output
+
+### Performance Testing
+
+Run performance benchmarks:
+
+```bash
+npm run perf
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Dependencies not installing correctly">
+    Make sure you're using `npm run inst` instead of `npm install`. If issues persist, try:
+    
+    ```bash
+    rm -rf node_modules package-lock.json
+    npm run inst
+    ```
+  </Accordion>
+  
+  <Accordion title="Port already in use">
+    If port 9000 or 3000 is already in use, kill the existing process:
+    
+    ```bash
+    # Find process on port 9000
+    lsof -ti:9000 | xargs kill -9
+    
+    # Find process on port 3000
+    lsof -ti:3000 | xargs kill -9
+    ```
+  </Accordion>
+  
+  <Accordion title="TypeScript errors">
+    Ensure you're using the correct TypeScript version:
+    
+    ```bash
+    npx tsc --version
+    ```
+    
+    The project uses TypeScript 5.7.2 as specified in `package.json`.
+  </Accordion>
+  
+  <Accordion title="WebSocket connection issues">
+    Check that:
+    1. The server is running (`npm run start:server-dev`)
+    2. Vite proxy configuration is correct in `vite.config.ts`
+    3. No firewall is blocking local connections
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card title="Discord Community" icon="discord" href="https://discord.gg/K9zernJB5z">
+    Join the development Discord for help
+  </Card>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/openfrontio/OpenFrontIO/issues">
+    Report bugs or request features
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="diagram-project" href="/development/architecture">
+    Understand OpenFront's system design
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Learn how to contribute code
+  </Card>
+  <Card title="Testing" icon="flask" href="/development/testing">
+    Write and run tests
+  </Card>
+</CardGroup>

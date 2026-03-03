@@ -1,0 +1,452 @@
+---
+title: "Pathfinding"
+description: "Understanding OpenFront's pathfinding algorithms and systems"
+---
+
+## Overview
+
+OpenFront implements multiple pathfinding algorithms optimized for different terrain types and use cases. The system is built around a flexible adapter pattern that allows different algorithms to be composed with transformers for enhanced functionality.
+
+## Architecture
+
+The pathfinding system is organized into several layers:
+
+- **Algorithms**: Core pathfinding implementations (A*, BFS, Hierarchical)
+- **PathFinders**: Domain-specific pathfinding interfaces
+- **Transformers**: Composable path enhancement layers
+- **Steppers**: Animated path traversal for UI
+
+## PathFinder Interface
+
+All pathfinding algorithms implement a common interface:
+
+```typescript
+interface PathFinder<T> {
+  findPath(start: T | T[], goal: T): T[] | null;
+}
+```
+
+<ParamField path="start" type="T | T[]">
+  Starting position(s). Multiple starts enable multi-source pathfinding.
+</ParamField>
+
+<ParamField path="goal" type="T">
+  Target destination position.
+</ParamField>
+
+<ParamField path="returns" type="T[] | null">
+  Array of positions forming the path, or null if no path exists.
+</ParamField>
+
+## A* Algorithm
+
+The core A* implementation uses an adapter pattern for flexibility:
+
+```typescript src/core/pathfinding/algorithms/AStar.ts
+export interface AStarAdapter {
+  neighbors(node: number, buffer: Int32Array): number;
+  cost(from: number, to: number, prev?: number): number;
+  heuristic(node: number, goal: number): number;
+  numNodes(): number;
+  maxPriority(): number;
+  maxNeighbors(): number;
+}
+
+export class AStar implements PathFinder<number> {
+  private stamp = 1;
+  private readonly closedStamp: Uint32Array;
+  private readonly gScoreStamp: Uint32Array;
+  private readonly gScore: Uint32Array;
+  private readonly cameFrom: Int32Array;
+  private readonly queue: PriorityQueue;
+  private readonly adapter: AStarAdapter;
+  private readonly neighborBuffer: Int32Array;
+  private readonly maxIterations: number;
+
+  constructor(config: AStarConfig) {
+    this.adapter = config.adapter;
+    this.maxIterations = config.maxIterations ?? 500_000;
+    this.neighborBuffer = new Int32Array(this.adapter.maxNeighbors());
+    this.closedStamp = new Uint32Array(this.adapter.numNodes());
+    this.gScoreStamp = new Uint32Array(this.adapter.numNodes());
+    this.gScore = new Uint32Array(this.adapter.numNodes());
+    this.cameFrom = new Int32Array(this.adapter.numNodes());
+    this.queue = new BucketQueue(this.adapter.maxPriority());
+  }
+
+  findPath(start: number | number[], goal: number): number[] | null {
+    this.stamp++;
+    if (this.stamp > 0xffffffff) {
+      this.closedStamp.fill(0);
+      this.gScoreStamp.fill(0);
+      this.stamp = 1;
+    }
+
+    const stamp = this.stamp;
+    // ... initialization
+
+    queue.clear();
+    const starts = Array.isArray(start) ? start : [start];
+    for (const s of starts) {
+      gScore[s] = 0;
+      gScoreStamp[s] = stamp;
+      cameFrom[s] = -1;
+      queue.push(s, adapter.heuristic(s, goal));
+    }
+
+    let iterations = this.maxIterations;
+
+    while (!queue.isEmpty()) {
+      if (--iterations <= 0) {
+        return null;
+      }
+
+      const current = queue.pop();
+
+      if (closedStamp[current] === stamp) continue;
+      closedStamp[current] = stamp;
+
+      if (current === goal) {
+        return this.buildPath(goal);
+      }
+
+      const currentG = gScore[current];
+      const prev = cameFrom[current];
+      const count = adapter.neighbors(current, buffer);
+
+      for (let i = 0; i < count; i++) {
+        const neighbor = buffer[i];
+        if (closedStamp[neighbor] === stamp) continue;
+
+        const tentativeG = currentG + adapter.cost(current, neighbor, prev);
+
+        if (gScoreStamp[neighbor] !== stamp || tentativeG < gScore[neighbor]) {
+          cameFrom[neighbor] = current;
+          gScore[neighbor] = tentativeG;
+          gScoreStamp[neighbor] = stamp;
+          queue.push(neighbor, tentativeG + adapter.heuristic(neighbor, goal));
+        }
+      }
+    }
+
+    return null;
+  }
+}
+```
+
+### Performance Optimizations
+
+<Note>
+The A* implementation uses several optimization techniques:
+
+- **Stamping**: Avoids array clearing by using generation stamps
+- **Typed Arrays**: Uses Int32Array/Uint32Array for cache-friendly access
+- **Buffer Reuse**: Neighbor buffer allocated once, reused across searches
+- **Bucket Queue**: O(1) priority queue for integer priorities
+</Note>
+
+## Breadth-First Search (BFS)
+
+BFS is used for unweighted searches and area exploration:
+
+```typescript src/core/pathfinding/algorithms/BFS.ts
+export interface BFSAdapter<T> {
+  neighbors(node: T): T[];
+}
+
+export class BFS<T> {
+  constructor(private adapter: BFSAdapter<T>) {}
+
+  search<R>(
+    start: T | T[],
+    maxDistance: number,
+    visitor: (node: T, dist: number) => R | null | undefined,
+  ): R | null {
+    const visited = new Set<T>();
+    const queue: { node: T; dist: number }[] = [];
+    const starts = Array.isArray(start) ? start : [start];
+
+    for (const s of starts) {
+      visited.add(s);
+      queue.push({ node: s, dist: 0 });
+    }
+
+    while (queue.length > 0) {
+      const { node, dist } = queue.shift()!;
+
+      const result = visitor(node, dist);
+
+      if (result !== null && result !== undefined) {
+        return result;
+      }
+
+      if (result === null) {
+        continue;
+      }
+
+      const nextDist = dist + 1;
+
+      if (nextDist > maxDistance) {
+        continue;
+      }
+
+      for (const neighbor of this.adapter.neighbors(node)) {
+        if (visited.has(neighbor)) {
+          continue;
+        }
+
+        visited.add(neighbor);
+        queue.push({ node: neighbor, dist: nextDist });
+      }
+    }
+
+    return null;
+  }
+}
+```
+
+### Visitor Pattern
+
+BFS uses a visitor pattern for flexible search termination:
+
+- **Return R**: Found target, return result immediately
+- **Return undefined**: Valid node, continue exploring
+- **Return null**: Invalid node, skip but continue search
+
+## PathFinding Factory
+
+The `PathFinding` class provides convenient factory methods for different terrain types:
+
+```typescript src/core/pathfinding/PathFinder.ts
+export class PathFinding {
+  static Water(game: Game): SteppingPathFinder<TileRef> {
+    const pf = game.miniWaterHPA();
+    const graph = game.miniWaterGraph();
+
+    if (!pf || !graph || graph.nodeCount < 100) {
+      return PathFinding.WaterSimple(game);
+    }
+
+    const miniMap = game.miniMap();
+    const componentCheckFn = (t: TileRef) => graph.getComponentId(t);
+
+    return PathFinderBuilder.create(pf)
+      .wrap((pf) => new ComponentCheckTransformer(pf, componentCheckFn))
+      .wrap((pf) => new SmoothingWaterTransformer(pf, miniMap))
+      .wrap((pf) => new ShoreCoercingTransformer(pf, miniMap))
+      .wrap((pf) => new MiniMapTransformer(pf, game.map(), miniMap))
+      .buildWithStepper(tileStepperConfig(game));
+  }
+
+  static Rail(game: Game): SteppingPathFinder<TileRef> {
+    const miniMap = game.miniMap();
+    const pf = new AStarRail(miniMap);
+
+    return PathFinderBuilder.create(pf)
+      .wrap((pf) => new MiniMapTransformer(pf, game.map(), miniMap))
+      .buildWithStepper(tileStepperConfig(game));
+  }
+
+  static Air(game: Game): SteppingPathFinder<TileRef> {
+    const pf = new AirPathFinder(game);
+
+    return PathFinderBuilder.create(pf).buildWithStepper({
+      equals: (a, b) => a === b,
+    });
+  }
+
+  static Stations(game: Game): SteppingPathFinder<TrainStation> {
+    const pf = new StationPathFinder(game);
+
+    return PathFinderBuilder.create(pf).buildWithStepper({
+      equals: (a, b) => a.id === b.id,
+      distance: (a, b) => game.manhattanDist(a.tile(), b.tile()),
+    });
+  }
+}
+```
+
+## Terrain-Specific Pathfinding
+
+### Water Pathfinding
+
+Water pathfinding uses hierarchical pathfinding for large maps:
+
+- **Component Check**: Verifies start/goal are in same water body
+- **Smoothing**: Reduces path zigzagging
+- **Shore Coercing**: Keeps ships near coastlines when beneficial
+- **Mini Map**: Operates on downscaled map for performance
+
+<Info>
+Hierarchical Pathfinding Algorithm (HPA*) divides the map into clusters with gateway nodes, dramatically reducing search space for long-distance paths.
+</Info>
+
+### Rail Pathfinding
+
+Rail pathfinding operates on the rail network graph:
+
+```typescript
+class AStarRail implements PathFinder<TileRef> {
+  constructor(private miniMap: GameMap) {}
+
+  findPath(start: TileRef, goal: TileRef): TileRef[] | null {
+    // Only traverse tiles with rail infrastructure
+    // Cost function accounts for rail type and connections
+  }
+}
+```
+
+### Air Pathfinding
+
+Air units use simplified pathfinding:
+
+- **No terrain blocking**: Can fly over any tile
+- **Direct paths**: Minimal pathfinding overhead
+- **Range constraints**: Limited by fuel/range
+
+## Path Transformers
+
+Transformers wrap pathfinders to enhance functionality:
+
+### ComponentCheckTransformer
+
+Early rejection for unreachable goals:
+
+```typescript
+class ComponentCheckTransformer implements PathFinder<TileRef> {
+  constructor(
+    private inner: PathFinder<TileRef>,
+    private getComponent: (t: TileRef) => number,
+  ) {}
+
+  findPath(start: TileRef, goal: TileRef): TileRef[] | null {
+    if (this.getComponent(start) !== this.getComponent(goal)) {
+      return null; // Different water bodies, no path possible
+    }
+    return this.inner.findPath(start, goal);
+  }
+}
+```
+
+### SmoothingWaterTransformer
+
+Reduces path zigzagging for more natural ship movement:
+
+```typescript
+class SmoothingWaterTransformer implements PathFinder<TileRef> {
+  constructor(
+    private inner: PathFinder<TileRef>,
+    private map: GameMap,
+  ) {}
+
+  findPath(start: TileRef, goal: TileRef): TileRef[] | null {
+    const path = this.inner.findPath(start, goal);
+    if (!path) return null;
+
+    // Apply smoothing algorithm to reduce unnecessary turns
+    return this.smoothPath(path);
+  }
+}
+```
+
+### MiniMapTransformer
+
+Maps between full resolution and downscaled pathfinding:
+
+```typescript
+class MiniMapTransformer implements PathFinder<TileRef> {
+  constructor(
+    private inner: PathFinder<TileRef>,
+    private fullMap: GameMap,
+    private miniMap: GameMap,
+  ) {}
+
+  findPath(start: TileRef, goal: TileRef): TileRef[] | null {
+    // Convert to mini map coordinates
+    const miniStart = this.toMini(start);
+    const miniGoal = this.toMini(goal);
+
+    // Find path on mini map
+    const miniPath = this.inner.findPath(miniStart, miniGoal);
+    if (!miniPath) return null;
+
+    // Convert back to full resolution
+    return miniPath.map((t) => this.toFull(t));
+  }
+}
+```
+
+<Note>
+Mini maps are typically 4x-8x smaller than full maps, providing significant performance improvements for long-distance pathfinding.
+</Note>
+
+## Stepping PathFinders
+
+Stepping pathfinders enable animated path traversal for UI:
+
+```typescript
+interface SteppingPathFinder<T> extends PathFinder<T> {
+  step(from: T, to: T): PathStep<T>;
+}
+
+type PathStep<T> = 
+  | { status: PathStatus.FOUND; path: T[] }
+  | { status: PathStatus.NOT_FOUND }
+  | { status: PathStatus.IN_PROGRESS; next: T };
+```
+
+### Usage Example
+
+```typescript
+const pathfinder = PathFinding.Water(game);
+let currentPos = startTile;
+
+while (currentPos !== goalTile) {
+  const step = pathfinder.step(currentPos, goalTile);
+  
+  if (step.status === PathStatus.FOUND) {
+    // Path complete
+    return step.path;
+  } else if (step.status === PathStatus.IN_PROGRESS) {
+    // Animate move to next position
+    currentPos = step.next;
+  } else {
+    // No path found
+    return null;
+  }
+}
+```
+
+## Performance Considerations
+
+### Optimization Techniques
+
+1. **Stamp-based Visited Sets**: Avoid clearing large arrays
+2. **Typed Arrays**: Cache-friendly memory layout
+3. **Mini Maps**: Reduce search space for long paths
+4. **Component Analysis**: Early rejection of impossible paths
+5. **Buffer Reuse**: Single allocation for neighbor queries
+
+### Iteration Limits
+
+```typescript
+const maxIterations = 500_000;
+let iterations = maxIterations;
+
+while (!queue.isEmpty()) {
+  if (--iterations <= 0) {
+    return null; // Prevent infinite loops
+  }
+  // ... pathfinding logic
+}
+```
+
+<Info>
+Iteration limits prevent pathfinding from hanging on extremely complex queries or bugs. For very large maps, the limit may need adjustment.
+</Info>
+
+## Related Systems
+
+- [Game Loop](/systems/game-loop) - Pathfinding runs during tick execution
+- [Intent/Execution](/systems/intents-executions) - Movement executions use pathfinding
+- [Alliances](/systems/alliances) - Alliance members may share pathing information

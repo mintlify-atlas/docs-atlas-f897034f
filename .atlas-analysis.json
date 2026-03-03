@@ -1,0 +1,107 @@
+{
+  "projectType": "saas",
+  "projectName": "OpenFront",
+  "projectDescription": "Online browser-based multiplayer real-time strategy game focused on territorial control and alliance building",
+  "theme": "aspen",
+  "primaryColor": "#2563eb",
+  "lightColor": "#60a5fa",
+  "darkColor": "#1e40af",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Game Guides",
+            "pages": [
+              "guides/gameplay",
+              "guides/alliances",
+              "guides/maps",
+              "guides/strategies"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/architecture",
+              "development/setup",
+              "development/contributing",
+              "development/testing"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Technical Reference",
+        "groups": [
+          {
+            "group": "Architecture",
+            "pages": [
+              "technical/overview",
+              "technical/client",
+              "technical/server",
+              "technical/core-simulation"
+            ]
+          },
+          {
+            "group": "Game Systems",
+            "pages": [
+              "systems/game-loop",
+              "systems/intents-executions",
+              "systems/pathfinding",
+              "systems/alliances"
+            ]
+          },
+          {
+            "group": "Map Generator",
+            "pages": [
+              "map-generator/overview",
+              "map-generator/usage"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Community",
+        "groups": [
+          {
+            "group": "Resources",
+            "pages": [
+              "community/discord",
+              "community/translations",
+              "community/governance"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Real-time multiplayer strategy gameplay",
+    "Alliance system for cooperative play",
+    "40+ maps based on real-world geography",
+    "Deterministic client-side simulation",
+    "Multiple game modes (FFA, Teams, Ranked)",
+    "Cross-platform browser compatibility"
+  ],
+  "publicApiSurface": [
+    "Game class (core simulation entry point)",
+    "GameMap and map types (World, Europe, Asia, etc.)",
+    "Intent system (player actions)",
+    "Execution system (game state modifications)",
+    "Alliance API",
+    "PathFinder algorithms",
+    "GameRunner (client and server)",
+    "WebSocket server endpoints",
+    "REST API routes (game info, stats)",
+    "Map generator CLI"
+  ]
+}
